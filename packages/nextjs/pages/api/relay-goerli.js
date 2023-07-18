@@ -1,9 +1,9 @@
-import { FlashbotsBundleProvider, FlashbotsBundleResolution } from "@flashbots/ethers-provider-bundle";
+import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { ethers } from "ethers";
 
-const SEND_ITER = 20;
+const SEND_ITER = 10;
 
-const goerliProvider = new ethers.providers.InfuraProvider(5);
+const goerliProvider = new ethers.providers.InfuraProvider("goerli", "416f5398fa3d4bb389f18fd3fa5fb58c");
 const goerliFlashbotProvider = await FlashbotsBundleProvider.create(
   goerliProvider,
   ethers.Wallet.createRandom(),
@@ -26,27 +26,7 @@ export default async function handler(req, res) {
   const submissionPromises = [];
   for (var i = 1; i <= SEND_ITER; i++)
     submissionPromises.push(goerliFlashbotProvider.sendRawBundle(signedBundle, currentBlockNumber + i));
-  const awaitedSubmissions = await Promise.all(submissionPromises);
+  await Promise.all(submissionPromises);
 
-  const awaitedResults = await Promise.all(
-    awaitedSubmissions.map(a => a.wait()),
-    //   {
-    //   const result = await a["wait"]();
-    //   console.log(`Awaited result: `);
-    //   console.log(result);
-    //   if (result == FlashbotsBundleResolution.BundleIncluded) {
-    //     res.status(203).json({ response: `Your bundle has been included successfully!` });
-    //     return;
-    //   }
-    // }),
-  );
-
-  console.log(awaitedResults);
-
-  if (awaitedResults.includes(FlashbotsBundleResolution.BundleIncluded)) {
-    res.status(203).json({ response: `Your bundle has been included successfully!` });
-    return;
-  }
-
-  res.status(203).json({ response: `Bundle not included. Try again with higher gas` });
+  res.status(203).json({ response: `Bundle submitted` });
 }

@@ -18,7 +18,7 @@ import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
 const ERC721_APPROVAL_GAS_UNITS = 55000;
 
-const BLOCKS_IN_THE_FUTURE = 5;
+const BLOCKS_IN_THE_FUTURE = 10;
 
 const flashbotSigner = ethers.Wallet.createRandom();
 
@@ -241,6 +241,8 @@ const Home: NextPage = () => {
       }
     } catch (error) {
       console.log(error);
+      setSentTxHash("");
+      setSentBlock(undefined);
       alert("Error submitting bundles. Check console for details.");
     }
   };
@@ -251,25 +253,28 @@ const Home: NextPage = () => {
       if (!sentTxHash || !sentBlock) return;
 
       console.log("checking if TXs were mined...");
+      const finalTargetBlock = sentBlock + BLOCKS_IN_THE_FUTURE;
+      const currentBlock = parseInt((await publicClient.getBlockNumber()).toString());
+      const blockDelta = finalTargetBlock - currentBlock;
+      console.log(`Will keep doing that for ${blockDelta} more blocks.`);
 
-      const currentBlock = await publicClient.getBlockNumber();
-      const txReceipt = await publicClient.getTransactionReceipt({
-        hash: sentTxHash as `0x${string}`,
-      });
-
-      console.log("currentBlock", currentBlock);
-      console.log("txReceipt", txReceipt);
-
-      if (txReceipt && txReceipt.blockNumber) {
-        alert("Bundle successfully mined in block " + txReceipt.blockNumber);
+      if (blockDelta < 0) {
+        alert(
+          `Bundle not included in the last ${BLOCKS_IN_THE_FUTURE} blocks. Try again with gas and priority fee 2 to 3 times that of the market`,
+        );
         setSentBlock(undefined);
         setSentTxHash("");
         return;
       }
-      if (currentBlock > sentBlock + 15) {
-        alert("Bundle not included in the last 15 blocks. Try again with even higher gas and priority fee.");
+      const txReceipt = await publicClient.getTransactionReceipt({
+        hash: sentTxHash as `0x${string}`,
+      });
+      if (txReceipt && txReceipt.blockNumber) {
+        alert("Bundle successfully mined in block " + txReceipt.blockNumber);
         setSentBlock(undefined);
         setSentTxHash("");
+        setCurrentBundleId("");
+        setUnsignedTxs([]);
         return;
       }
 
@@ -391,7 +396,7 @@ const Home: NextPage = () => {
             rpcUrls: [
               `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
             ],
-            blockExplorerUrls: ["https://etherscan.io"],
+            blockExplorerUrls: ["https://goerli.etherscan.io"],
           },
         ],
       });
