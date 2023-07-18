@@ -19,7 +19,6 @@ import { getTargetNetwork } from "~~/utils/scaffold-eth";
 const ERC721_APPROVAL_GAS_UNITS = 55000;
 
 const BLOCKS_IN_THE_FUTURE = 5;
-const RELAY_ENDPOINT_PATH = "api/relay";
 
 const flashbotSigner = ethers.Wallet.createRandom();
 
@@ -102,7 +101,6 @@ const Home: NextPage = () => {
     "hackedAddress",
     "0x5F1442eF295BC2Ef0a65b7d49198a34B13c1E3aB",
   );
-  const [fundAmount, setFundAmount] = useState<BigNumber>(BigNumber.from("0"));
 
   //////////////////////////////////////////
   //*********** Handling unsigned transactions
@@ -160,7 +158,7 @@ const Home: NextPage = () => {
     return FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(
       BigNumber.from(block.baseFeePerGas),
       BLOCKS_IN_THE_FUTURE,
-    ).add(BigNumber.from("100000000"));
+    );
   };
 
   const estimateTotalGasPrice = async () => {
@@ -175,7 +173,9 @@ const Home: NextPage = () => {
       )
     )
       .reduce((acc, val) => acc.add(val), BigNumber.from("0"))
-      .mul(await maxBaseFeeInFuture());
+      .mul(await maxBaseFeeInFuture())
+      .mul(5)
+      .div(4);
   };
 
   useEffect(() => {
@@ -194,97 +194,9 @@ const Home: NextPage = () => {
   //////////////////////////////////////////
 
   const [gasCovered, setGasCovered] = useState<boolean>(false);
-
-  // Bundle is a string of transaction hashes, fetched from the bundle api
-  const [bundle, setBundle] = useState<string[]>([]);
-  const [bundleUuidHistory, setBundleUuidHistory] = useLocalStorage<string[]>("bundleUuidHistory", []);
   const [currentBundleId, setCurrentBundleId] = useLocalStorage("bundleUuid", "");
-
-  const bundleDisplay = (
-    <div>
-      {Object.keys(bundle).length == 0 && (
-        <div className="flex justify-center">
-          <span className="text-2xl">empty bundle</span>
-        </div>
-      )}
-
-      {Object.keys(bundle).length > 0 && (
-        <div className="text-2xl">
-          {Object.entries(bundle).map(([key, value]) => (
-            <div key={key}>hi</div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const [flashbotsRpc, setFlashbotsRpc] = useLocalStorage("flashbotsRpc", "");
-  const [flashbotsBundleQuery, setFlashbotsBundleQuery] = useLocalStorage("flashbotsBundleQuery", "");
-
-  const [bundleSent, setBundleSent] = useState<boolean>();
+  const [sentTxHash, setSentTxHash] = useState<string>();
   const [sentBlock, setSentBlock] = useState<number>();
-  const [sentTxHashes, setSentTxHashes] = useState<string[]>([]);
-
-  // Poll Flashbot's bundle API to get the sent transactions
-  useInterval(async () => {
-    try {
-      if (!currentBundleId) return;
-
-      const bundle = await fetch(flashbotsBundleQuery);
-      const bundleJson = await bundle.json();
-      if (bundleJson.rawTxs)
-        // reverse the order of the txs so the last tx is first
-        setBundle(bundleJson?.rawTxs.reverse());
-
-      console.log(bundleJson);
-    } catch (e) {
-      console.log(e);
-    }
-  }, 5000);
-
-  // poll blocks for txHashes of our bundle
-  useInterval(async () => {
-    try {
-      if (!bundleSent || !sentBlock || sentTxHashes.length == 0) return;
-
-      console.log("checking if TXs were mined.");
-      console.log("sentBundle", bundleSent);
-      console.log("sentBlock", sentBlock);
-      console.log("txHashes", sentTxHashes);
-
-      const currentBlock = await publicClient.getBlockNumber();
-      const txReceipt = await publicClient.getTransactionReceipt({
-        hash: sentTxHashes[0] as `0x${string}`,
-      });
-
-      console.log("currentBlock", currentBlock);
-      console.log("txReceipt", txReceipt);
-
-      if (txReceipt && txReceipt.blockNumber) {
-        alert("Bundle mined in block " + txReceipt.blockNumber);
-        setBundleSent(undefined);
-        setSentBlock(undefined);
-        setSentTxHashes([]);
-      }
-      if (currentBlock > sentBlock + 10) {
-        alert("Bundle not found in the last 10 blocks. resetting poller.");
-        setBundleSent(undefined);
-        setSentBlock(undefined);
-        setSentTxHashes([]);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }, 5000);
-
-  useEffect(() => {
-    setFlashbotsRpc(
-      `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=` + currentBundleId,
-    );
-    setFlashbotsBundleQuery(
-      `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net/bundle?id=` + currentBundleId,
-    );
-  }, [currentBundleId]);
 
   const sendBundle = async () => {
     if (!flashbotsProvider) {
@@ -292,38 +204,39 @@ const Home: NextPage = () => {
       return;
     }
     try {
-      const finalBundle = await fetch(flashbotsBundleQuery);
-      const finalBundleJson = await finalBundle.json();
-      if (!finalBundleJson || !finalBundleJson.rawTxs) {
+      const finalBundle = await (
+        await fetch(
+          `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net/bundle?id=${currentBundleId}`,
+        )
+      ).json();
+      if (!finalBundle || !finalBundle.rawTxs) {
         alert("Couldn't fetch latest bundle");
         return;
       }
-      const txs = finalBundleJson.rawTxs.reverse();
 
-      const currentBlockNumber = parseInt((await publicClient.getBlockNumber()).toString());
-      // strip any leading 0x00 bytes from hexBlockNumber
-      const targetBlockNumber = ethers.utils.hexlify(currentBlockNumber + BLOCKS_IN_THE_FUTURE).replace(/^0x0+/, "0x");
+      const txs = finalBundle.rawTxs.reverse();
 
       try {
+        setSentTxHash(ethers.utils.keccak256(txs[0]));
+        setSentBlock(parseInt((await publicClient.getBlockNumber()).toString()));
+
         const currentUrl = window.location.href.replace("?", "");
-        await fetch(currentUrl + RELAY_ENDPOINT_PATH, {
+        const rawRes = await fetch(currentUrl + `api/relay${targetNetwork.network == "goerli" ? "-goerli" : ""}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            txs: txs,
-            // targetBlockNumber: targetBlockNumber,
+            txs,
           }),
         });
+        const res = await rawRes.json();
 
-        setSentBlock(currentBlockNumber);
-        setSentTxHashes(txs.map(ethers.utils.keccak256));
-        setBundleSent(true);
-
-        alert("Bundles submitted");
+        alert(res.response);
       } catch (e) {
         console.log(e);
+        setSentTxHash("");
+        setSentBlock(undefined);
         alert("Error submitting bundles. Check console for details.");
       }
     } catch (error) {
@@ -331,6 +244,38 @@ const Home: NextPage = () => {
       alert("Error submitting bundles. Check console for details.");
     }
   };
+
+  // poll blocks for txHashes of our bundle
+  useInterval(async () => {
+    try {
+      if (!sentTxHash || !sentBlock) return;
+
+      console.log("checking if TXs were mined...");
+
+      const currentBlock = await publicClient.getBlockNumber();
+      const txReceipt = await publicClient.getTransactionReceipt({
+        hash: sentTxHash as `0x${string}`,
+      });
+
+      console.log("currentBlock", currentBlock);
+      console.log("txReceipt", txReceipt);
+
+      if (txReceipt && txReceipt.blockNumber) {
+        alert("Bundle successfully mined in block " + txReceipt.blockNumber);
+        setSentBlock(undefined);
+        setSentTxHash("");
+        return;
+      }
+      if (currentBlock > sentBlock + 15) {
+        alert("Bundle not included in the last 15 blocks. Try again with even higher gas and priority fee.");
+        setSentBlock(undefined);
+        setSentTxHash("");
+        return;
+      }
+
+      console.log("TXs not yet mined");
+    } catch (e) {}
+  }, 5000);
 
   //////////////////////////////////////////
   //******** Handle signing & account switching
@@ -365,12 +310,11 @@ const Home: NextPage = () => {
     ////////// Create new bundle uuid & add corresponding RPC 'subnetwork' to Metamask
     const newBundleUuid = uuid();
     setCurrentBundleId(newBundleUuid);
-    setBundleUuidHistory(prev => Array.from(new Set([...prev, newBundleUuid])));
     await addRelayRPC(newBundleUuid);
 
     ////////// Cover the envisioned total gas fee from safe account
     const totalGas = await estimateTotalGasPrice();
-    await walletClient?.sendTransaction({
+    await walletClient!.sendTransaction({
       to: hackedAddress as `0x${string}`,
       value: BigInt(totalGas.toString()),
     });
@@ -379,7 +323,7 @@ const Home: NextPage = () => {
   };
 
   const signRecoveryTransactions = async () => {
-    if (!gasCovered || Object.keys(bundle).length == 0) {
+    if (!gasCovered) {
       alert("How did you come here without covering the gas fee first??");
       return;
     }
@@ -431,12 +375,6 @@ const Home: NextPage = () => {
       console.error("MetaMask Ethereum provider is not available");
       return;
     }
-
-    console.log("addRelayRPC");
-    console.log(
-      "rpcUrl " + `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
-    );
-    console.log("chainId " + `0x${targetNetwork.network == "goerli" ? 5 : 1}`);
 
     try {
       await window.ethereum.request({
@@ -581,7 +519,7 @@ const Home: NextPage = () => {
                   className={`btn btn-sm mr-3 `}
                   onClick={coverGas}
                 >
-                  DONE
+                  {!sentTxHash || sentTxHash == "" ? "DONE" : "..."}
                 </button>
               ) : (
                 <button
@@ -603,15 +541,6 @@ const Home: NextPage = () => {
           <></>
           <div className="flex gap-y-2 w-full flex-col justify-center"></div>
         </div>
-        <></>
-        <></>
-
-        <div className="flex w-11/12 justify-center gap-x-5 p-5 ">
-          <div className="flex gap-y-2 w-full flex-col justify-start p-3 h-72 overflow-auto border-2 border-primary rounded-2xl">
-            {bundleDisplay}
-          </div>
-        </div>
-
         <></>
         <></>
       </div>
