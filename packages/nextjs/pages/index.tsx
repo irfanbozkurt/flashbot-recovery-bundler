@@ -12,8 +12,8 @@ import { getContract } from "viem";
 import { useAccount, useContractRead, useFeeData, usePublicClient, useWalletClient } from "wagmi";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { MetaHeader } from "~~/components/MetaHeader";
-import { AddressInput, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
-import { ERC20_ABI } from "~~/utils/constants";
+import { AddressInput, InputBase, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
 const ERC721_APPROVAL_GAS_UNITS = 55000;
@@ -30,38 +30,6 @@ const Home: NextPage = () => {
   const publicClient = usePublicClient();
 
   const { data: feeData } = useFeeData();
-
-  //////////////////////////////////////////
-  //*********** Modal
-  //////////////////////////////////////////
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [modalContent, setModalContent] = useState<any>(<></>);
-  const openModal = (modalContentJsx: any) => {
-    setModalContent(modalContentJsx);
-    setModalOpen(true);
-  };
-
-  const modalDisplay = (
-    <ReactModal
-      isOpen={modalOpen}
-      style={{
-        content: {
-          top: "50%",
-          left: "50%",
-          right: "auto",
-          bottom: "auto",
-          marginRight: "-50%",
-          transform: "translate(-50%, -50%)",
-          backgroundColor: "rgb(99 102 241)",
-        },
-      }}
-      ariaHideApp={false}
-      onRequestClose={() => setModalOpen(false)}
-      contentLabel="qweqwe"
-    >
-      {modalContent}
-    </ReactModal>
-  );
 
   //////////////////////////////////////////
   //*********** FlashbotProvider
@@ -119,29 +87,34 @@ const Home: NextPage = () => {
 
   const unsignedTxsDisplay = (
     <>
-      {Object.keys(unsignedTxs).length == 0 && <span className="text-2xl">no unsigned tx</span>}
+      {Object.keys(unsignedTxs).length == 0 && (
+        <div className="flex justify-center items-center">
+          <span className="text-2xl">no unsigned tx</span>
+        </div>
+      )}
       {Object.keys(unsignedTxs).length > 0 && (
-        <div className="text-2xl">
-          {Object.entries(unsignedTxs).map(([idx, tx]) => (
-            <div key={idx} className="flex flex-col bg-base-500 bg-opacity-80 z-0 p-2 rounded-2xl shadow-lg">
-              <div className="flex gap-x-5 pb-3">
-                <XMarkIcon className="w-6 cursor-pointer" onClick={() => removeUnsignedTx(parseInt(idx))} />
-                <span className="text-lg">{(tx as any)["type"] ? (tx as any)["type"] : ""}</span>
-              </div>
-              <span className="text-xl">
-                {Object.entries(tx).map(([key, value]) => {
-                  if (key == "type") return null;
-                  return (
-                    <div key={key} className="flex flex-col">
-                      <span className="text-lg">
-                        {key} : {value.substring(0, 42) + (value.length > 42 ? "..." : "")}
-                      </span>
-                    </div>
-                  );
-                })}
-              </span>
-            </div>
-          ))}
+        <div>
+          {Object.entries(unsignedTxs).map(
+            ([idx, tx]) =>
+              tx && (
+                <div key={idx} className="flex flex-row items-center gap-x-2 p-2 w-full">
+                  <div>
+                    <XMarkIcon className="w-6 cursor-pointer" onClick={() => removeUnsignedTx(parseInt(idx))} />
+                  </div>
+
+                  <div className="w-full">
+                    <select className="w-full p-1 text-gray-500 rounded-md shadow-sm appearance-none">
+                      <option>{(tx as any)["type"] ? (tx as any)["type"] : ""}</option>
+
+                      {Object.entries(tx).map(([key, value]) => {
+                        if (key == "type") return null;
+                        return <option key={key} disabled={true}>{`${key}:${value.toString()}`}</option>;
+                      })}
+                    </select>
+                  </div>
+                </div>
+              ),
+          )}
         </div>
       )}
     </>
@@ -174,8 +147,8 @@ const Home: NextPage = () => {
     )
       .reduce((acc, val) => acc.add(val), BigNumber.from("0"))
       .mul(await maxBaseFeeInFuture())
-      .mul(5)
-      .div(4);
+      .mul(10)
+      .div(9);
   };
 
   useEffect(() => {
@@ -264,6 +237,8 @@ const Home: NextPage = () => {
         );
         setSentBlock(undefined);
         setSentTxHash("");
+        setHackedAddress("");
+        setSafeAddress("");
         return;
       }
       const txReceipt = await publicClient.getTransactionReceipt({
@@ -286,68 +261,170 @@ const Home: NextPage = () => {
   //******** Handle signing & account switching
   //////////////////////////////////////////
 
+  // Step1
+  const [step1ModalOpen, setStep1ModalOpen] = useState<boolean>(false);
+  const step1ModalDisplay = step1ModalOpen && (
+    <ReactModal
+      isOpen={step1ModalOpen}
+      style={{
+        content: {
+          top: "50%",
+          left: "50%",
+          right: "auto",
+          bottom: "auto",
+          marginRight: "-50%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "rgb(99 102 241)",
+        },
+      }}
+      ariaHideApp={false}
+      onRequestClose={() => {
+        setStep1ModalOpen(false);
+        coverGas();
+      }}
+    >
+      <div className="flex flex-col gap-y-3 justify-center items-center">
+        <span className="text-2xl">Connect the safe account</span>
+        <RainbowKitCustomConnectButton />
+        <span className="text-2xl">And close the modal</span>
+      </div>
+    </ReactModal>
+  );
+
+  // Step2
+  const [step2ModalOpen, setStep2ModalOpen] = useState<boolean>(false);
+  const step2ModalDisplay = step2ModalOpen && (
+    <ReactModal
+      isOpen={step2ModalOpen}
+      style={{
+        content: {
+          top: "50%",
+          left: "50%",
+          right: "auto",
+          bottom: "auto",
+          marginRight: "-50%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "rgb(99 102 241)",
+        },
+      }}
+      ariaHideApp={false}
+      onRequestClose={() => {
+        setStep2ModalOpen(false);
+        coverGas();
+      }}
+    >
+      <div className="flex flex-col">
+        <span className="text-2xl">Please connect the safe address {safeAddress} from wallet</span>
+        <span className="text-2xl">And close the modal. This is necessary to cover the gas fees.</span>
+      </div>
+    </ReactModal>
+  );
+
+  // Step3
+  const [step3ModalOpen, setStep3ModalOpen] = useState<boolean>(false);
+  const step3ModalDisplay = step3ModalOpen && (
+    <ReactModal
+      isOpen={step3ModalOpen}
+      style={{
+        content: {
+          top: "50%",
+          left: "50%",
+          right: "auto",
+          bottom: "auto",
+          marginRight: "-50%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "rgb(99 102 241)",
+        },
+      }}
+      ariaHideApp={false}
+      onRequestClose={() => {
+        setStep3ModalOpen(false);
+        signRecoveryTransactions();
+      }}
+    >
+      <div className="flex flex-col">
+        <span className="text-2xl">Connect your metamask and switch to the hacked account</span>
+        <RainbowKitCustomConnectButton />
+      </div>
+    </ReactModal>
+  );
+
+  // Step4
+  const [step4ModalOpen, setStep4ModalOpen] = useState<boolean>(false);
+  const step4ModalDisplay = step4ModalOpen && (
+    <ReactModal
+      isOpen={step4ModalOpen}
+      style={{
+        content: {
+          top: "50%",
+          left: "50%",
+          right: "auto",
+          bottom: "auto",
+          marginRight: "-50%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "rgb(99 102 241)",
+        },
+      }}
+      ariaHideApp={false}
+      onRequestClose={() => {
+        setStep4ModalOpen(false);
+        signRecoveryTransactions();
+      }}
+    >
+      <div className="flex flex-col">
+        <span className="text-2xl">Please switch to the hacked address {hackedAddress}</span>
+        <span className="text-2xl">And close the modal. This is necessary to cover the gas fees.</span>
+      </div>
+    </ReactModal>
+  );
+
   const coverGas = async () => {
     if (gasCovered) {
-      console.error("you already covered the gas. If you're in a confussy situation, clear cookies and refresh page.");
+      alert("you already covered the gas. If you're in a confussy situation, clear cookies and refresh page.");
       return;
     }
 
     ////////// Enforce switching to the safe address
     if (!connectedAccount) {
-      openModal(
-        // ToDo: can I make this cover whole screen, and not close until user switches to the safe account?
-        <div className="flex flex-col gap-y-3 justify-center items-center">
-          <span className="text-2xl">Connect your metamask and switch to the safe account</span>
-          <RainbowKitCustomConnectButton />
-          <span className="text-2xl">Then close this modal, and click done again</span>
-        </div>,
-      );
+      setStep1ModalOpen(true);
       return;
     } else if (connectedAccount != safeAddress) {
-      openModal(
-        <div className="flex flex-col">
-          <span className="text-2xl">Please switch to the safe address using Metamask</span>
-        </div>,
-      );
+      setStep2ModalOpen(true);
       return;
     }
 
-    ////////// Create new bundle uuid & add corresponding RPC 'subnetwork' to Metamask
-    const newBundleUuid = uuid();
-    setCurrentBundleId(newBundleUuid);
-    await addRelayRPC(newBundleUuid);
+    try {
+      ////////// Create new bundle uuid & add corresponding RPC 'subnetwork' to Metamask
+      const newBundleUuid = uuid();
+      setCurrentBundleId(newBundleUuid);
+      await addRelayRPC(newBundleUuid);
 
-    ////////// Cover the envisioned total gas fee from safe account
-    const totalGas = await estimateTotalGasPrice();
-    await walletClient!.sendTransaction({
-      to: hackedAddress as `0x${string}`,
-      value: BigInt(totalGas.toString()),
-    });
+      ////////// Cover the envisioned total gas fee from safe account
+      const totalGas = await estimateTotalGasPrice();
+      await walletClient!.sendTransaction({
+        to: hackedAddress as `0x${string}`,
+        value: BigInt(totalGas.toString()),
+      });
 
-    setGasCovered(true);
+      setGasCovered(true);
+      signRecoveryTransactions(true);
+    } catch (e) {
+      alert(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
+    }
   };
 
-  const signRecoveryTransactions = async () => {
-    if (!gasCovered) {
+  const signRecoveryTransactions = async (surpass: boolean = false) => {
+    if (!surpass && !gasCovered) {
       alert("How did you come here without covering the gas fee first??");
       return;
     }
 
     ////////// Enforce switching to the hacked address
     if (!connectedAccount) {
-      openModal(
-        <div className="flex flex-col">
-          <span className="text-2xl">Connect your metamask and switch to the hacked account</span>
-          <RainbowKitCustomConnectButton />
-        </div>,
-      );
+      setStep3ModalOpen(true);
       return;
     } else if (connectedAccount != hackedAddress) {
-      openModal(
-        <div className="flex flex-col">
-          <span className="text-2xl">Please switch to the hacked address using Metamask</span>
-        </div>,
-      );
+      setStep4ModalOpen(true);
       return;
     }
 
@@ -367,7 +444,6 @@ const Home: NextPage = () => {
     } catch (e) {
       console.error(`FAILED TO SIGN TXS`);
       console.error(e);
-      return;
     }
   };
 
@@ -414,7 +490,7 @@ const Home: NextPage = () => {
 
   let erc20Balance: string = "NO INFO";
   try {
-    let { data, refetch: refetchErc20Balance } = useContractRead({
+    let { data } = useContractRead({
       chainId: getTargetNetwork().id,
       functionName: "balanceOf",
       address: erc20ContractAddress as `0x${string}`,
@@ -422,52 +498,198 @@ const Home: NextPage = () => {
       watch: true,
       args: [hackedAddress],
     });
-    if (data) erc20Balance = BigNumber.from(data).toString();
+    if (data) {
+      erc20Balance = BigNumber.from(data).toString();
+      if (erc20Balance == "0") erc20Balance = "NO INFO";
+    }
   } catch (e) {
     // Most probably the contract address is not valid as user is
     // still typing, so ignore.
   }
 
   const erc20RecoveryDisplay = (
-    <div className="flex w-full flex-col gap-y-2 justify-center bg-base-200 bg-opacity-80 z-0 p-7 rounded-2xl shadow-lg">
+    <div className="w-full h-full flex flex-col gap-y-2 justify-center bg-base-200 bg-opacity-80 z-0 p-7 rounded-2xl shadow-lg">
       <div className="flex justify-center">
-        <span className="text-2xl">Recover ERC20</span>
+        <span className="text-2xl">ERC20</span>
       </div>
       <AddressInput
         value={erc20ContractAddress}
-        placeholder={"ERC20 token contract address"}
+        placeholder={"ERC20 contract address"}
         onChange={setErc20ContractAddress}
       />
 
-      <div className="w-full flex gap-x-10">
-        <span className="text-xl">Hacked account balance: </span>
-        <span className="text-xl">{erc20Balance} </span>
-      </div>
-
-      {erc20Balance == "..." ? (
-        <div className="flex justify-center">
-          <span className="text-xl text-red-800">CHECK CONTRACT ADDRESS</span>
+      {erc20Balance != "NO INFO" && (
+        <div className="w-full flex gap-x-10">
+          <span className="text-xl">Hacked account balance: </span>
+          <span className="text-xl">{erc20Balance} </span>
         </div>
-      ) : (
-        <button
-          className="btn btn-primary"
-          onClick={async () => {
-            const erc20tx = {
-              type: `ERC20 transfer to ${safeAddress}`,
-              from: hackedAddress,
-              to: erc20ContractAddress,
-              data: new ethers.utils.Interface(ERC20_ABI).encodeFunctionData("transfer", [
-                safeAddress,
-                BigNumber.from(erc20Balance),
-              ]),
-            };
-            addUnsignedTx(erc20tx);
-            setErc20ContractAddress("");
-          }}
-        >
-          <span className="text-2xl">🧺 add 🧺</span>
-        </button>
       )}
+
+      <button
+        className="btn btn-primary"
+        onClick={async () => {
+          if (!erc20ContractAddress) {
+            alert("Provide a contract first");
+            return;
+          }
+          if (erc20Balance == "NO INFO") {
+            alert("Hacked account has no balance in given erc20 contract");
+            return;
+          }
+          const erc20tx = {
+            type: `ERC20 recovery`,
+            from: hackedAddress,
+            to: erc20ContractAddress,
+            data: new ethers.utils.Interface(ERC20_ABI).encodeFunctionData("transfer", [
+              safeAddress,
+              BigNumber.from(erc20Balance),
+            ]),
+          };
+          addUnsignedTx(erc20tx);
+          setErc20ContractAddress("");
+        }}
+      >
+        <span className="text-2xl">🧺 add 🧺</span>
+      </button>
+    </div>
+  );
+
+  //////////////////////////////////////////
+  //*********** ERC721 recovery
+  //////////////////////////////////////////
+
+  const [erc721ContractAddress, setErc721ContractAddress] = useLocalStorage("erc721ContractAddress", "");
+  const [erc721TokenId, setErc721TokenId] = useLocalStorage("erc721TokenId", "");
+
+  const erc721RecoveryDisplay = (
+    <div className="w-full h-full flex flex-col overflow-auto gap-y-2 justify-center bg-base-200 bg-opacity-80 z-0 p-7 rounded-2xl shadow-lg">
+      <div className="flex justify-center">
+        <span className="text-2xl">ERC721</span>
+      </div>
+      <AddressInput
+        value={erc721ContractAddress}
+        placeholder={"ERC721 contract address"}
+        onChange={setErc721ContractAddress}
+      />
+      <InputBase<string> placeholder={"ERC721 tokenId"} value={erc721TokenId} onChange={setErc721TokenId} />
+      <button
+        className="btn btn-primary"
+        onClick={async () => {
+          if (!erc721ContractAddress || !erc721TokenId) {
+            alert("Provide a contract and a token ID");
+            return;
+          }
+
+          let ownerOfGivenTokenId;
+          try {
+            ownerOfGivenTokenId = await publicClient.readContract({
+              address: erc721ContractAddress as `0x${string}`,
+              abi: ERC721_ABI,
+              functionName: "ownerOf",
+              args: [BigNumber.from(erc721TokenId)],
+            });
+          } catch (e) {}
+
+          if (!ownerOfGivenTokenId || ownerOfGivenTokenId.toString() != hackedAddress) {
+            alert(`Couldn't verify hacked account's ownership. Cannot add to the basket...`);
+            return;
+          }
+
+          const erc721tx = {
+            type: `NFT recovery for tokenId ${erc721TokenId}`,
+            from: hackedAddress,
+            to: erc721ContractAddress,
+            data: new ethers.utils.Interface(ERC721_ABI).encodeFunctionData("transferFrom", [
+              hackedAddress,
+              safeAddress,
+              BigNumber.from(erc721TokenId),
+            ]),
+          };
+
+          addUnsignedTx(erc721tx);
+          setErc721ContractAddress("");
+          setErc721TokenId("");
+        }}
+      >
+        <span className="text-2xl">🧺 add 🧺</span>
+      </button>
+    </div>
+  );
+
+  //////////////////////////////////////////
+  //*********** ERC1155 recovery
+  //////////////////////////////////////////
+
+  const [erc1155ContractAddress, setErc1155ContractAddress] = useLocalStorage("erc1155ContractAddress", "");
+  const [erc1155TokenIds, setErc1155TokenIds] = useLocalStorage("erc1155TokenIds", "");
+
+  const erc1155RecoveryDisplay = (
+    <div className="w-full h-full flex flex-col overflow-auto gap-y-2 justify-center bg-base-200 bg-opacity-80 z-0 p-7 rounded-2xl shadow-lg">
+      <div className="flex justify-center">
+        <span className="text-2xl">ERC1155</span>
+      </div>
+      <AddressInput
+        value={erc1155ContractAddress}
+        placeholder={"ERC1155 contract address"}
+        onChange={setErc1155ContractAddress}
+      />
+      <InputBase<string>
+        placeholder={"Comma-separated token ids"}
+        value={erc1155TokenIds}
+        onChange={str => setErc1155TokenIds(str.replace(" ", ""))}
+      />
+
+      <button
+        className="btn btn-primary"
+        onClick={async () => {
+          const tokenIds = erc1155TokenIds
+            .split(",")
+            .map(a => a)
+            .map(a => BigNumber.from(a));
+          console.log("zürten erc1155 tokenIds");
+          console.log(tokenIds);
+
+          const balances = (await publicClient.readContract({
+            address: erc1155ContractAddress as `0x${string}`,
+            abi: ERC1155_ABI,
+            functionName: "balanceOfBatch",
+            args: [Array(tokenIds.length).fill(hackedAddress), tokenIds],
+          })) as BigNumber[];
+          console.log("zürten erc1155 balances");
+          console.log(balances);
+
+          const tokenIdsWithInvalidBalances: BigNumber[] = [];
+          for (let i = 0; i < tokenIds.length; i++) {
+            if (!balances[i] || balances[i].toString() == "0") {
+              tokenIdsWithInvalidBalances.push(tokenIds[i]);
+            }
+          }
+          if (tokenIdsWithInvalidBalances.length > 0) {
+            alert(
+              `Remove following tokenIds as hacked account does not own them: ${tokenIdsWithInvalidBalances.toString()}`,
+            );
+            return;
+          }
+
+          const erc1155tx = {
+            type: `ERC1155 for tokenIds ${tokenIds.toString()}`,
+            from: hackedAddress,
+            to: erc1155ContractAddress,
+            data: new ethers.utils.Interface(ERC1155_ABI).encodeFunctionData("safeBatchTransferFrom", [
+              hackedAddress,
+              safeAddress,
+              tokenIds,
+              balances,
+              ethers.constants.HashZero,
+            ]),
+          };
+          addUnsignedTx(erc1155tx);
+          setErc1155ContractAddress("");
+          setErc1155TokenIds("");
+        }}
+      >
+        <span className="text-2xl">🧺 add 🧺</span>
+      </button>
     </div>
   );
 
@@ -483,73 +705,131 @@ const Home: NextPage = () => {
     abi: contractABI as any,
   });
 
+  //////////////////////////////////////////
+  //*********** Custom / Basic View
+  //////////////////////////////////////////
+  const [isBasic, setIsBasic] = useState<boolean>(true);
+
   return (
-    <>
+    <div className="">
       <MetaHeader />
-      {modalDisplay}
+
+      {step1ModalDisplay}
+      {step2ModalDisplay}
+      {step3ModalDisplay}
+      {step4ModalDisplay}
+
       <></>
       <></>
 
-      <div className="flex flex-col items-center flex-grow pt-5">
-        <button onClick={sendBundle}>TEST</button>
-        <></>
-        <></>
-        <div className="flex w-11/12 justify-center items-center">
-          <div className="flex w-full flex-col gap-y-3 gap-x-5 p-5 ">
-            <div className="flex justify-center">
-              <span className="text-2xl ml-3">Start by entering the safe funding account</span>
-            </div>
-            <div className="w-full">
-              {/* <RainbowKitCustomConnectButton /> */}
-              <AddressInput value={safeAddress} placeholder={"Funding Address"} onChange={setSafeAddress} />
-            </div>
-            <div className="flex justify-center">
-              <span className="text-2xl">and entering hacked account address</span>
-            </div>
-            <div className="w-full">
-              <AddressInput value={hackedAddress} placeholder={"Hacked Address"} onChange={setHackedAddress} />
-            </div>
-          </div>
-
-          <></>
-
-          <div className="flex w-full divide-y divide-dashed flex-col justify-start h-72 overflow-auto border-2 border-primary rounded-2xl">
-            <div className="flex justify-between py-1">
-              <span className="text-2xl ml-3">🧺</span>
-              <div className="">{totalGasEstimationDisplay}</div>
-
-              {!gasCovered ? (
-                <button
-                  style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
-                  className={`btn btn-sm mr-3 `}
-                  onClick={coverGas}
-                >
-                  {!sentTxHash || sentTxHash == "" ? "DONE" : "..."}
-                </button>
-              ) : (
-                <button
-                  style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
-                  className={`btn btn-sm mr-3 `}
-                  onClick={signRecoveryTransactions}
-                >
-                  sign txs
-                </button>
-              )}
-            </div>
-            {unsignedTxsDisplay}
-          </div>
-        </div>
-        <></>
-        <></>
-        <div className="flex space-around gap-x-5 w-11/12 p-5">
-          {erc20RecoveryDisplay}
-          <></>
-          <div className="flex gap-y-2 w-full flex-col justify-center"></div>
-        </div>
-        <></>
-        <></>
+      <div className="flex justify-center py-12">
+        <span className="text-6xl">FLASHBOT BUNDLER FOR ASSETS RECOVERIES</span>
       </div>
-    </>
+
+      <></>
+      <></>
+
+      <div className="flex">
+        <div className="flex w-80">
+          <img src="assets/bg.png" alt={`bg`} />
+        </div>
+
+        <div className="flex w-full flex-col justify-around items-center">
+          {/* <button onClick={sendBundle}>TEST</button> */}
+          <div className="flex w-full justify-center">
+            <div className="flex w-full flex-col justify-start gap-y-3 gap-x-5 p-2">
+              <div className="flex flex-col justify-start">
+                <div className="flex justify-start">
+                  <span className="text-2xl">safe account</span>
+                </div>
+                <div className="w-full">
+                  <AddressInput value={safeAddress} placeholder={"Funding Address"} onChange={setSafeAddress} />
+                </div>
+                <div className="flex justify-start">
+                  <span className="text-2xl">hacked account</span>
+                </div>
+                <div className="w-full">
+                  <AddressInput value={hackedAddress} placeholder={"Hacked Address"} onChange={setHackedAddress} />
+                </div>
+              </div>
+            </div>
+            <></>
+
+            <div
+              style={{
+                border: "1px solid rgba(215, 215, 215, .20)",
+              }}
+              className="flex w-full divide-y divide-dashed flex-col justify-start h-48 overflow-auto  rounded-2xl"
+            >
+              <div className="flex justify-between py-1">
+                <span className="text-2xl ml-3">🧺</span>
+                <div className="">{totalGasEstimationDisplay}</div>
+
+                {!gasCovered ? (
+                  <button
+                    style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
+                    className={`btn btn-sm mr-3 `}
+                    onClick={coverGas}
+                  >
+                    {!sentTxHash || sentTxHash == "" ? "DONE" : "..."}
+                  </button>
+                ) : (
+                  <></>
+                  // <button
+                  //   style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
+                  //   className={`btn btn-sm mr-3 `}
+                  //   onClick={signRecoveryTransactions}
+                  // >
+                  //   sign txs
+                  // </button>
+                )}
+              </div>
+              {unsignedTxsDisplay}
+            </div>
+          </div>
+
+          <></>
+
+          <div className="flex justify-center items-center pt-5 gap-x-5">
+            <button
+              disabled={isBasic}
+              onClick={() => setIsBasic(true)}
+              className={`btn btn-primary text-2xl bg-orange-300 border-none`}
+            >
+              BASIC
+            </button>
+            <button
+              disabled={!isBasic}
+              onClick={() => setIsBasic(false)}
+              className={`btn btn-primary text-2xl bg-orange-300 border-none`}
+            >
+              CUSTOM
+            </button>
+          </div>
+
+          <></>
+
+          <div
+            style={{ minWidth: "400px", maxWidth: "1200px" }}
+            className="mx-7 my-5 w-full flex overflow-x-auto space-x-5 border border-gray-200/25 rounded-3xl"
+          >
+            <div style={{ minWidth: "400px" }} className="w-full py-3">
+              {erc20RecoveryDisplay}
+            </div>
+            <div style={{ minWidth: "400px" }} className="w-full py-3">
+              {erc721RecoveryDisplay}
+            </div>
+            <div style={{ minWidth: "400px", maxHeight: "275px" }} className="w-full py-3">
+              {erc1155RecoveryDisplay}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex w-80">
+          <img src="assets/bg2.png" alt={`bg2`} />
+        </div>
+      </div>
+    </div>
   );
 };
 

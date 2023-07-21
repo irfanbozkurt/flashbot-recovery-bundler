@@ -1,4 +1,4 @@
-export const ERC721ABI = [
+export const ERC721_ABI = [
   {
     constant: true,
     inputs: [
@@ -70,9 +70,17 @@ export const ERC721ABI = [
     stateMutability: "view",
     type: "function",
   },
+
+  {
+    inputs: [{ internalType: "uint256", name: "id", type: "uint256" }],
+    name: "ownerOf",
+    outputs: [{ internalType: "address", name: "owner", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
-export const ERC1155ABI = [
+export const ERC1155_ABI = [
   {
     inputs: [
       { internalType: "contract ENS", name: "_ens", type: "address" },
