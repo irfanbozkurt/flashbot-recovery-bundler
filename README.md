@@ -55,6 +55,9 @@ If the compromised account or the funding account has any pending transactions i
 
 ## Walkthrough
 
+Here we provide a detailed walkthrough and explanations to each step.
+
+
 <details>
 <summary>Entering the safe / funding account & compromised / hacked account</summary>
 
