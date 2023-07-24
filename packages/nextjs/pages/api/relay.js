@@ -1,12 +1,11 @@
 import { FlashbotsBundleProvider, FlashbotsBundleResolution } from "@flashbots/ethers-provider-bundle";
 import { ethers } from "ethers";
 
-const goerliProvider = new ethers.providers.InfuraProvider(5);
-const goerliFlashbotProvider = await FlashbotsBundleProvider.create(
-  goerliProvider,
+const mainnetProvider = new ethers.providers.InfuraProvider(1, "416f5398fa3d4bb389f18fd3fa5fb58c");
+const flashbotProvider = await FlashbotsBundleProvider.create(
+  mainnetProvider,
   ethers.Wallet.createRandom(),
-  "https://relay-goerli.flashbots.net/",
-  "goerli",
+  "https://relay.flashbots.net/",
 );
 
 export default async function handler(req, res) {
@@ -18,21 +17,10 @@ export default async function handler(req, res) {
   const reformattedBundle = body.txs.map(signedTx => {
     return { signedTransaction: signedTx };
   });
-  const signedBundle = await goerliFlashbotProvider.signBundle(reformattedBundle);
-  const currentBlockNumber = await goerliProvider.getBlockNumber();
+  const signedBundle = await flashbotProvider.signBundle(reformattedBundle);
+  const currentBlockNumber = await mainnetProvider.getBlockNumber();
 
-  const submissionPromises = [];
-  for (var i = 1; i <= 5; i++) {
-    submissionPromises.push(goerliFlashbotProvider.sendRawBundle(signedBundle, currentBlockNumber + i));
-    console.log("submitted for block # ", currentBlockNumber + i);
-  }
-  const awaitedSubmissions = await Promise.all(submissionPromises);
-  console.log("-------------------------AWAITED1-----------------------");
-  console.log(awaitedSubmissions);
+  await flashbotProvider.sendRawBundle(signedBundle, currentBlockNumber + 1);
 
-  const awaited2 = await Promise.all(awaitedSubmissions.map(a => a["wait"]()));
-  console.log("-----------------------AWAITED2-------------------------");
-  console.log(awaited2);
-
-  res.status(200); //.json({ response: result });
+  res.status(203).json({ response: `Bundle submitted` });
 }

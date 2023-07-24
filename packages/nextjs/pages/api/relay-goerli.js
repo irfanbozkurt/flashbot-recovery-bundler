@@ -23,6 +23,9 @@ export default async function handler(req, res) {
   const signedBundle = await goerliFlashbotProvider.signBundle(reformattedBundle);
   const currentBlockNumber = await goerliProvider.getBlockNumber();
 
+  // const simulationResult = await goerliFlashbotProvider.simulate(signedBundle, currentBlockNumber + 2);
+  // console.log(simulationResult);
+
   const submissionPromises = [];
   for (var i = 1; i <= SEND_ITER; i++)
     submissionPromises.push(goerliFlashbotProvider.sendRawBundle(signedBundle, currentBlockNumber + i));

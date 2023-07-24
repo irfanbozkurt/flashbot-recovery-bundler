@@ -1,4 +1,4 @@
-import { WriteOnlyFunctionForm } from "./WriteOnlyFunctionForm";
+import { CustomContractWriteForm } from "./WriteOnlyFunctionForm";
 import { Abi, AbiFunction } from "abitype";
 import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
@@ -27,7 +27,7 @@ export const ContractWriteMethods = ({
   return (
     <>
       {functionsToDisplay.map((fn, idx) => (
-        <WriteOnlyFunctionForm
+        <CustomContractWriteForm
           key={`${fn.name}-${idx}}`}
           abiFunction={fn}
           onChange={onChange}
