@@ -296,13 +296,13 @@ const Home: NextPage = () => {
         hash: sentTxHash as `0x${string}`,
       });
       if (txReceipt && txReceipt.blockNumber) {
+        resetState();
         setCountdownModalOpen(false);
         openCustomModal(
           <div style={{ maxWidth: "800px" }} className="flex flex-col gap-y-3 justify-center items-center">
             <span className="text-2xl">Bundle successfully mined in block {txReceipt.blockNumber.toString()}</span>
           </div>,
         );
-        resetState();
         return;
       }
       console.log("TXs not yet mined");
