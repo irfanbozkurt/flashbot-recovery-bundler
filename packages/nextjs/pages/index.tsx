@@ -817,7 +817,7 @@ const Home: NextPage = () => {
         }}
         style={{ minHeight: "100px" }}
         className="w-full textarea textarea-info textarea-lg text-sm rounded-lg bg-opacity-20"
-        placeholder={`Function ABI Here \n e.g. function transfer(address,uint)`}
+        placeholder={`Function signature Here \n e.g. function transfer(address,uint)`}
       />
 
       <div>{externalContractDisplay}</div>
