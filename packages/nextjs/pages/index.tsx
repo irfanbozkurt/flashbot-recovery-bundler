@@ -530,7 +530,7 @@ const Home: NextPage = () => {
             rpcUrls: [
               `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
             ],
-            blockExplorerUrls: ["https://goerli.etherscan.io"],
+            blockExplorerUrls: [`https://${targetNetwork.network == "goerli" ? "goerli." : ""}etherscan.io`],
           },
         ],
       });
