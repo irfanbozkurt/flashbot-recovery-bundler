@@ -1,4 +1,4 @@
-import { FlashbotsBundleProvider, FlashbotsBundleResolution } from "@flashbots/ethers-provider-bundle";
+import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { ethers } from "ethers";
 
 const mainnetProvider = new ethers.providers.InfuraProvider(1, "416f5398fa3d4bb389f18fd3fa5fb58c");
