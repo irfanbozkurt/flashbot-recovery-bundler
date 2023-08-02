@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { BigNumber } from "@ethersproject/bignumber";
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { AbiFunction } from "abitype";
-import { Alchemy, AssetTransfersCategory, AssetTransfersResult, ERC1155Metadata, Network } from "alchemy-sdk";
+import { Alchemy, AssetTransfersCategory, AssetTransfersResult, Network } from "alchemy-sdk";
 import { ethers } from "ethers";
 import type { NextPage } from "next";
 import ReactModal from "react-modal";
@@ -20,6 +20,7 @@ import {
   InputBase,
   RainbowKitCustomConnectButton,
 } from "~~/components/scaffold-eth";
+import { ERC20Tx, ERC721Tx, ERC1155Tx, RecoveryTx, UnsignedTxs } from "~~/types/business";
 import { ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
@@ -112,49 +113,65 @@ const Home: NextPage = () => {
   //////////////////////////////////////////
   //*********** Handling unsigned transactions
   //////////////////////////////////////////
-  const [unsignedTxs, setUnsignedTxs] = useLocalStorage<{ [index: number]: object }>("unsignedTxs", {});
-  const txEquals = (tx1: { [i: string]: any }, tx2: { [i: string]: any }) => {
-    const keys1 = Object.keys(tx1);
-    const keys2 = Object.keys(tx2);
-    if (keys1.length != keys2.length || !keys1.every(key => key in tx2)) {
-      return false;
-    }
-    for (let i = 0; i < keys1.length; i++) {
-      const key = keys1[i];
-      if (key == "type") {
-        continue;
-      }
-      if (tx1[key] != tx2[key]) {
-        return false;
-      }
-    }
-    return true;
-  };
-  const isDuplicateTx = (newTx: object) => {
-    const txs = Object.values(unsignedTxs);
-    for (let i = 0; i < txs.length; i++) {
-      if (txEquals(newTx, txs[i])) {
+  const [unsignedTxs, setUnsignedTxs] = useLocalStorage<UnsignedTxs>("unsignedTxs", {});
+
+  const isDuplicateTx = (newTx: RecoveryTx): boolean => {
+    const unsignedTxsArray = Object.values(unsignedTxs);
+    const txsOfSameType = unsignedTxsArray.filter(tx => tx.type == newTx.type);
+
+    if (newTx.type == "erc20" || newTx.type == "erc1155") {
+      if (txsOfSameType.some(tx => tx.toSign.to == newTx.toSign.to)) {
         return true;
       }
+      const customCalls = unsignedTxsArray.filter(tx => tx.type == "custom");
+      return customCalls.some(tx => tx.toSign.to == newTx.toSign.to);
+    } else if (newTx.type == "erc721" || newTx.type == "custom") {
+      if (
+        newTx.type == "erc721" &&
+        (txsOfSameType as ERC721Tx[]).some(
+          tx => tx.toSign.to == newTx.toSign.to && tx.tokenId == (newTx as ERC721Tx).tokenId,
+        )
+      ) {
+        return true;
+      }
+
+      const customCalls = unsignedTxsArray.filter(tx => tx.type == "custom");
+      for (let i = 0; i < customCalls.length; i++) {
+        if (newTx.toSign.to == customCalls[i].toSign.to && newTx.toSign.data == customCalls[i].toSign.data) {
+          return true;
+        }
+      }
     }
+
     return false;
   };
-  const addUnsignedTx = (newTx: object) => {
+
+  const addUnsignedTx = (newTx: RecoveryTx): void => {
     if (isDuplicateTx(newTx)) {
+      if (newTx.type == "erc20" || newTx.type == "erc1155") {
+        alert(`You can have one call to an ${newTx.type} contract. Remove the existing one before adding this.`);
+      } else if (newTx.type == "erc721") {
+        alert("You already have a call to this contract with given tokenId. Remove that before adding this one.");
+      } else {
+        alert("You already have an identical call. Remove that before adding this one.");
+      }
+
       return;
     }
-    setUnsignedTxs((prev: any) => {
+    setUnsignedTxs((prev: UnsignedTxs) => {
       prev[Object.keys(prev).length] = newTx;
-      return prev;
+      return Object.values(prev).filter(a => a != undefined && a != null);
     });
     estimateTotalGasPrice().then(setTotalGasEstimate);
   };
-  const removeUnsignedTx = (txId: number) => {
-    setUnsignedTxs((prev: any) => {
+  const removeUnsignedTx = (txId: number, tryEstimation: boolean = true) => {
+    setUnsignedTxs((prev: UnsignedTxs) => {
       delete prev[txId];
-      return prev;
+      return Object.values(prev).filter(a => a != undefined && a != null);
     });
-    estimateTotalGasPrice().then(setTotalGasEstimate);
+    if (tryEstimation) {
+      estimateTotalGasPrice().then(setTotalGasEstimate);
+    }
   };
 
   const unsignedTxsDisplay = (
@@ -176,12 +193,16 @@ const Home: NextPage = () => {
 
                   <div className="w-full">
                     <select className="w-full p-1 text-gray-500 rounded-md shadow-sm appearance-none">
-                      <option>{(tx as any)["type"] ? (tx as any)["type"] : ""}</option>
+                      <option>{tx.info}</option>
 
-                      {Object.entries(tx).map(([key, value]) => {
-                        if (key == "type") return null;
-                        return <option key={key} disabled={true}>{`${key}:${value.toString()}`}</option>;
-                      })}
+                      {Object.entries({ ...tx, ...tx.toSign, toSign: undefined, info: undefined }).map(
+                        ([key, value]) => {
+                          if (!value) {
+                            return null;
+                          }
+                          return <option key={key} disabled={true}>{`${key}:${value.toString()}`}</option>;
+                        },
+                      )}
                     </select>
                   </div>
                 </div>
@@ -210,11 +231,17 @@ const Home: NextPage = () => {
     const tempProvider = new ethers.providers.InfuraProvider(targetNetwork.id, "416f5398fa3d4bb389f18fd3fa5fb58c");
     try {
       const estimates = await Promise.all(
-        Object.values(unsignedTxs).map(tx => {
-          const nakedTx = Object.assign({}, tx);
-          delete (nakedTx as any)["type"];
-          return tempProvider.estimateGas(nakedTx);
-        }),
+        Object.entries(unsignedTxs).map(([txId, tx]) =>
+          tempProvider.estimateGas(tx.toSign).catch(e => {
+            console.error(
+              `Following tx will fail when bundle is submitted, so it's removed from the bundle right now. The contract might be a hacky one, and you can try further manipulation via crafting a custom call.`,
+            );
+            console.error(tx);
+            console.error(e);
+            removeUnsignedTx(parseInt(txId), false);
+            return BigNumber.from("0");
+          }),
+        ),
       );
       return estimates
         .reduce((acc: BigNumber, val: BigNumber) => acc.add(val), BigNumber.from("0"))
@@ -331,7 +358,6 @@ const Home: NextPage = () => {
       });
       if (txReceipt && txReceipt.blockNumber) {
         resetState();
-        setCountdownModalOpen(false);
         openCustomModal(
           <div style={{ maxWidth: "800px" }} className="flex flex-col gap-y-3 justify-center items-center">
             <span className="text-2xl">Bundle successfully mined in block {txReceipt.blockNumber.toString()}</span>
@@ -528,8 +554,7 @@ const Home: NextPage = () => {
 
     try {
       for (const txId of orderedTxIds) {
-        const { type, ...pureTx } = unsignedTxs[txId] as { type: string };
-        orderedTxHashes.push(await walletClient!.sendTransaction(pureTx));
+        orderedTxHashes.push(await walletClient!.sendTransaction(unsignedTxs[txId].toSign));
       }
       setGasCovered(false);
       sendBundle();
@@ -580,12 +605,18 @@ const Home: NextPage = () => {
   const [erc20ContractAddress, setErc20ContractAddress] = useLocalStorage<string>("erc20ContractAddress", "");
 
   const addErc20TxToBasket = (contractAddress: string, balance: string) => {
-    addUnsignedTx({
-      type: `ERC20 recovery`,
-      from: hackedAddress,
-      to: contractAddress,
-      data: erc20Interface.encodeFunctionData("transfer", [safeAddress, BigNumber.from(balance)]),
-    });
+    const newErc20tx: ERC20Tx = {
+      type: "erc20",
+      info: "changeme",
+      symbol: "changeme",
+      amount: balance,
+      toSign: {
+        from: hackedAddress as `0x${string}`,
+        to: contractAddress as `0x${string}`,
+        data: erc20Interface.encodeFunctionData("transfer", [safeAddress, BigNumber.from(balance)]) as `0x${string}`,
+      },
+    };
+    addUnsignedTx(newErc20tx);
   };
 
   let erc20Balance: string = "NO INFO";
@@ -654,16 +685,22 @@ const Home: NextPage = () => {
   const [erc721TokenId, setErc721TokenId] = useLocalStorage<string>("erc721TokenId", "");
 
   const addErc721TxToBasket = (contractAddress: string, erc721TokenId: string) => {
-    addUnsignedTx({
-      type: `NFT recovery for tokenId ${erc721TokenId}`,
-      from: hackedAddress,
-      to: contractAddress,
-      data: erc721Interface.encodeFunctionData("transferFrom", [
-        hackedAddress,
-        safeAddress,
-        BigNumber.from(erc721TokenId),
-      ]),
-    });
+    const newErc721Tx: ERC721Tx = {
+      type: "erc721",
+      info: `NFT recovery for tokenId ${erc721TokenId}`,
+      symbol: "changeme",
+      tokenId: erc721TokenId,
+      toSign: {
+        from: hackedAddress as `0x${string}`,
+        to: contractAddress as `0x${string}`,
+        data: erc721Interface.encodeFunctionData("transferFrom", [
+          hackedAddress,
+          safeAddress,
+          BigNumber.from(erc721TokenId),
+        ]) as `0x${string}`,
+      },
+    };
+    addUnsignedTx(newErc721Tx);
   };
 
   const erc721RecoveryDisplay = (
@@ -718,23 +755,26 @@ const Home: NextPage = () => {
   const [erc1155ContractAddress, setErc1155ContractAddress] = useLocalStorage<string>("erc1155ContractAddress", "");
   const [erc1155TokenIds, setErc1155TokenIds] = useLocalStorage<string>("erc1155TokenIds", "");
 
-  const addErc1155TxToBasket = (
-    contractAddress: string,
-    erc1155TokenIds: BigNumber[],
-    erc1155TokenBalances: BigNumber[],
-  ) => {
-    addUnsignedTx({
-      type: `ERC1155 for tokenIds ${erc1155TokenIds.toString()}`,
-      from: hackedAddress,
-      to: contractAddress,
-      data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [
-        hackedAddress,
-        safeAddress,
-        erc1155TokenIds,
-        erc1155TokenBalances,
-        ethers.constants.HashZero,
-      ]),
-    });
+  const addErc1155TxToBasket = (contractAddress: string, erc1155TokenIds: string[], erc1155TokenBalances: string[]) => {
+    const newErc1155Tx: ERC1155Tx = {
+      type: "erc1155",
+      info: `ERC1155 for tokenIds ${erc1155TokenIds.toString()}`,
+      uri: "changeme",
+      tokenIds: erc1155TokenIds,
+      amounts: erc1155TokenBalances,
+      toSign: {
+        from: hackedAddress as `0x${string}`,
+        to: contractAddress as `0x${string}`,
+        data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [
+          hackedAddress,
+          safeAddress,
+          erc1155TokenIds,
+          erc1155TokenBalances,
+          ethers.constants.HashZero,
+        ]) as `0x${string}`,
+      },
+    };
+    addUnsignedTx(newErc1155Tx);
   };
 
   const erc1155RecoveryDisplay = (
@@ -779,7 +819,11 @@ const Home: NextPage = () => {
             return;
           }
 
-          addErc1155TxToBasket(erc1155ContractAddress, tokenIds, balances);
+          addErc1155TxToBasket(
+            erc1155ContractAddress,
+            tokenIds.map(t => t.toString()),
+            balances.map(t => t.toString()),
+          );
 
           setErc1155ContractAddress("");
           setErc1155TokenIds("");
@@ -795,23 +839,23 @@ const Home: NextPage = () => {
   //////////////////////////////////////////
 
   const [customContractAddress, setCustomContractAddress] = useLocalStorage<string>("customContractAddress", "");
-  const [customFunctionABIString, setCustomFunctionABIString] = useLocalStorage<string>("customFunctionABI", "");
+  const [customFunctionSignature, setCustomFunctionSignature] = useLocalStorage<string>("customFunctionSignature", "");
   const [externalContractDisplay, setExternalContractDisplay] = useState(<></>);
 
   useEffect(() => {
     try {
-      const parsedFunctAbi = parseAbiItem(customFunctionABIString) as AbiFunction;
+      const parsedFunctAbi = parseAbiItem(customFunctionSignature) as AbiFunction;
       setExternalContractDisplay(
         <div className="p-5 divide-y divide-base-300">
           <CustomContractWriteForm
-            fragmentString={customFunctionABIString}
+            fragmentString={customFunctionSignature}
             abiFunction={parsedFunctAbi}
             addUnsignedTx={addUnsignedTx}
             hackedAddress={hackedAddress as `0x${string}`}
             contractAddress={customContractAddress as `0x${string}`}
             resetState={() => {
               setCustomContractAddress("");
-              setCustomFunctionABIString("");
+              setCustomFunctionSignature("");
               setExternalContractDisplay(<></>);
             }}
           />
@@ -820,7 +864,7 @@ const Home: NextPage = () => {
     } catch (e) {
       setExternalContractDisplay(<></>);
     }
-  }, [customFunctionABIString, customContractAddress]);
+  }, [customFunctionSignature, customContractAddress]);
 
   //////////////////////////////////////////
   //*********** Custom / Basic View
@@ -857,9 +901,9 @@ const Home: NextPage = () => {
       </div>
 
       <textarea
-        value={customFunctionABIString}
+        value={customFunctionSignature}
         onChange={e => {
-          setCustomFunctionABIString(e.target.value);
+          setCustomFunctionSignature(e.target.value);
         }}
         style={{ minHeight: "100px" }}
         className="w-full textarea textarea-info textarea-lg text-sm rounded-lg bg-opacity-20"
@@ -871,7 +915,7 @@ const Home: NextPage = () => {
   );
 
   //////////////////////////////////////////
-  //*********** Custom / Basic View
+  //*********** Custom modal
   //////////////////////////////////////////
 
   const [customModalOpen, setCustomModalOpen] = useLocalStorage<boolean>("customModalOpen", false);
@@ -987,25 +1031,44 @@ const Home: NextPage = () => {
     setHackedAddress("");
     setSafeAddress("");
     setAccountsInputGiven(false);
+
     setUnsignedTxs({});
+
     setTotalGasEstimate(BigNumber.from("0"));
+
     setGasCovered(false);
     setCurrentBundleId("");
     setSentTxHash("");
     setSentBlock(0);
+
     setStep1ModalOpen(false);
     setStep2ModalOpen(false);
     setStep3ModalOpen(false);
     setStep4ModalOpen(false);
+
     setErc20ContractAddress("");
+
     setErc721ContractAddress("");
     setErc721TokenId("");
+
     setErc1155ContractAddress("");
     setErc1155TokenIds("");
+
     setCustomContractAddress("");
-    setCustomFunctionABIString("");
-    setIsBasic(true);
+    setCustomFunctionSignature("");
     setExternalContractDisplay(<></>);
+
+    setIsBasic(true);
+
+    setCountdownModalOpen(false);
+    setBlockCountdown(0);
+
+    setTryAgainModalOpen(false);
+
+    setLatestFetchedHackedAddress("");
+    setErc20ContractsAndBalances({});
+    setErc721ContractsAndOwnedTokens({});
+    setErc1155ContractsAndTokenIdsWithBalances({});
   };
 
   //////////////////////////////////////////

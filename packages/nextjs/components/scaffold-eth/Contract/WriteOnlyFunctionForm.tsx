@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Abi, AbiFunction } from "abitype";
+import { AbiFunction } from "abitype";
 import { ethers } from "ethers";
 import { FunctionFragment } from "ethers/lib/utils";
 import { Address } from "viem";
-import { useContractWrite } from "wagmi";
 import {
   ContractInput,
   IntegerInput,
@@ -12,11 +11,12 @@ import {
   getParsedContractFunctionArgs,
   getParsedError,
 } from "~~/components/scaffold-eth";
-import { getTargetNetwork, notification } from "~~/utils/scaffold-eth";
+import { CustomTx, RecoveryTx } from "~~/types/business";
+import { notification } from "~~/utils/scaffold-eth";
 
 type WriteOnlyFunctionFormProps = {
   abiFunction: AbiFunction;
-  addUnsignedTx: (newTx: object) => void;
+  addUnsignedTx: (newTx: RecoveryTx) => void;
   contractAddress: Address;
   hackedAddress: Address;
   fragmentString: string;
@@ -82,11 +82,17 @@ export const CustomContractWriteForm = ({
 
                 const fragment = FunctionFragment.fromString(fragmentString.replace("function", "").trim());
 
-                const customTx = {
-                  type: `Custom call (${abiFunction.name}) to ${contractAddress}`,
-                  from: hackedAddress,
-                  to: contractAddress,
-                  data: new ethers.utils.Interface([fragment]).encodeFunctionData(abiFunction.name, callParams),
+                const customTx: CustomTx = {
+                  type: "custom",
+                  info: `Custom call (${abiFunction.name}) to ${contractAddress}`,
+                  toSign: {
+                    from: hackedAddress,
+                    to: contractAddress,
+                    data: new ethers.utils.Interface([fragment]).encodeFunctionData(
+                      abiFunction.name,
+                      callParams,
+                    ) as `0x${string}`,
+                  },
                 };
 
                 addUnsignedTx(customTx);
