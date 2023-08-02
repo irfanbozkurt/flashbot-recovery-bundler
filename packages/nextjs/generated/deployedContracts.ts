@@ -5,7 +5,7 @@ const contracts = {
       name: "goerli",
       contracts: {
         A: {
-          address: "0x02422ce78f81db2dEE4eBDf736C2AFa0b59d5406",
+          address: "0x7AE657c6878dda8b245aF1f8226da20Aa3E6e32b",
           abi: [
             {
               inputs: [],
@@ -285,7 +285,7 @@ const contracts = {
           ],
         },
         B: {
-          address: "0x8eefb4A1671610883009a46e10495B5dE7380a43",
+          address: "0x413F679ff135C246a33069B92B8194A0a617b804",
           abi: [
             {
               inputs: [],
@@ -625,7 +625,7 @@ const contracts = {
           ],
         },
         C: {
-          address: "0x516B8b6a528c14AB0Ca32E556D2A4D30a2766a1E",
+          address: "0x1032e913d94d9b01a047db7D71f2E45d81082F17",
           abi: [
             {
               inputs: [],
@@ -1279,7 +1279,7 @@ const contracts = {
           ],
         },
         Z: {
-          address: "0x8ba4074988E62B4f41144D68ADa5eF2642508686",
+          address: "0x3a55aFF39f427340A73fCCf2714AA0B542fDDFbe",
           abi: [
             {
               inputs: [],
