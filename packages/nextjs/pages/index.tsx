@@ -20,7 +20,15 @@ import {
   InputBase,
   RainbowKitCustomConnectButton,
 } from "~~/components/scaffold-eth";
-import { ERC20Tx, ERC721Tx, ERC1155Tx, RecoveryTx, UnsignedTxs } from "~~/types/business";
+import {
+  AutoDetectedERC20Info,
+  AutoDetectedERC721Info,
+  AutoDetectedERC1155Info,
+  ERC20Tx,
+  ERC721Tx,
+  ERC1155Tx,
+  RecoveryTx,
+} from "~~/types/business";
 import { ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
@@ -92,7 +100,7 @@ const Home: NextPage = () => {
       <div className="w-full">
         <button
           className="btn btn-primary w-full"
-          onClick={() => {
+          onClick={async () => {
             if (!ethers.utils.isAddress(safeAddress)) {
               alert("Given safe address is not a valid address");
               return;
@@ -101,6 +109,7 @@ const Home: NextPage = () => {
               alert("Given hacked address is not a valid address");
               return;
             }
+            await addAutoDetectedAssetsToBasket();
             setAccountsInputGiven(true);
           }}
         >
@@ -113,17 +122,16 @@ const Home: NextPage = () => {
   //////////////////////////////////////////
   //*********** Handling unsigned transactions
   //////////////////////////////////////////
-  const [unsignedTxs, setUnsignedTxs] = useLocalStorage<UnsignedTxs>("unsignedTxs", {});
+  const [unsignedTxs, setUnsignedTxs] = useLocalStorage<RecoveryTx[]>("unsignedTxs", []);
 
   const isDuplicateTx = (newTx: RecoveryTx): boolean => {
-    const unsignedTxsArray = Object.values(unsignedTxs);
-    const txsOfSameType = unsignedTxsArray.filter(tx => tx.type == newTx.type);
+    const txsOfSameType = unsignedTxs.filter(tx => tx.type == newTx.type);
 
     if (newTx.type == "erc20" || newTx.type == "erc1155") {
       if (txsOfSameType.some(tx => tx.toSign.to == newTx.toSign.to)) {
         return true;
       }
-      const customCalls = unsignedTxsArray.filter(tx => tx.type == "custom");
+      const customCalls = unsignedTxs.filter(tx => tx.type == "custom");
       return customCalls.some(tx => tx.toSign.to == newTx.toSign.to);
     } else if (newTx.type == "erc721" || newTx.type == "custom") {
       if (
@@ -135,7 +143,7 @@ const Home: NextPage = () => {
         return true;
       }
 
-      const customCalls = unsignedTxsArray.filter(tx => tx.type == "custom");
+      const customCalls = unsignedTxs.filter(tx => tx.type == "custom");
       for (let i = 0; i < customCalls.length; i++) {
         if (newTx.toSign.to == customCalls[i].toSign.to && newTx.toSign.data == customCalls[i].toSign.data) {
           return true;
@@ -158,37 +166,45 @@ const Home: NextPage = () => {
 
       return;
     }
-    setUnsignedTxs((prev: UnsignedTxs) => {
-      prev[Object.keys(prev).length] = newTx;
-      return Object.values(prev).filter(a => a != undefined && a != null);
+
+    setUnsignedTxs((prev: RecoveryTx[]) => {
+      const newUnsignedTxArr = [...prev.filter(a => a != undefined && a != null), newTx];
+      estimateTotalGasPrice(newUnsignedTxArr).then(setTotalGasEstimate);
+      return newUnsignedTxArr;
     });
-    estimateTotalGasPrice().then(setTotalGasEstimate);
   };
+
   const removeUnsignedTx = (txId: number, tryEstimation: boolean = true) => {
-    setUnsignedTxs((prev: UnsignedTxs) => {
+    setUnsignedTxs((prev: RecoveryTx[]) => {
+      if (txId < 0 || txId > prev.length) {
+        return prev.filter(a => a);
+      }
       delete prev[txId];
-      return Object.values(prev).filter(a => a != undefined && a != null);
+
+      const newUnsignedTxArr = prev.filter(a => a);
+
+      if (tryEstimation) {
+        estimateTotalGasPrice(newUnsignedTxArr).then(setTotalGasEstimate);
+      }
+      return newUnsignedTxArr;
     });
-    if (tryEstimation) {
-      estimateTotalGasPrice().then(setTotalGasEstimate);
-    }
   };
 
   const unsignedTxsDisplay = (
     <>
-      {Object.keys(unsignedTxs).length == 0 && (
+      {unsignedTxs.length == 0 && (
         <div className="flex justify-center items-center">
           <span className="text-2xl">no unsigned tx</span>
         </div>
       )}
-      {Object.keys(unsignedTxs).length > 0 && (
+      {unsignedTxs.length > 0 && (
         <>
-          {Object.entries(unsignedTxs).map(
-            ([idx, tx]) =>
+          {unsignedTxs.map(
+            (tx, idx) =>
               tx && (
                 <div key={idx} className="flex flex-row items-center gap-x-2 p-2 w-full">
                   <div>
-                    <XMarkIcon className="w-6 cursor-pointer" onClick={() => removeUnsignedTx(parseInt(idx))} />
+                    <XMarkIcon className="w-6 cursor-pointer" onClick={() => removeUnsignedTx(idx)} />
                   </div>
 
                   <div className="w-full">
@@ -227,22 +243,29 @@ const Home: NextPage = () => {
     );
   };
 
-  const estimateTotalGasPrice = async () => {
+  const estimateTotalGasPrice = async (txs?: RecoveryTx[]) => {
     const tempProvider = new ethers.providers.InfuraProvider(targetNetwork.id, "416f5398fa3d4bb389f18fd3fa5fb58c");
+    if (!txs) {
+      txs = unsignedTxs;
+    }
+
     try {
       const estimates = await Promise.all(
-        Object.entries(unsignedTxs).map(([txId, tx]) =>
-          tempProvider.estimateGas(tx.toSign).catch(e => {
-            console.error(
-              `Following tx will fail when bundle is submitted, so it's removed from the bundle right now. The contract might be a hacky one, and you can try further manipulation via crafting a custom call.`,
-            );
-            console.error(tx);
-            console.error(e);
-            removeUnsignedTx(parseInt(txId), false);
-            return BigNumber.from("0");
+        txs
+          .filter(a => a)
+          .map((tx, txId) => {
+            return tempProvider.estimateGas(tx.toSign).catch(e => {
+              console.warn(
+                `Following tx will fail when bundle is submitted, so it's removed from the bundle right now. The contract might be a hacky one, and you can try further manipulation via crafting a custom call.`,
+              );
+              console.warn(tx);
+              console.warn(e);
+              removeUnsignedTx(txId, false);
+              return BigNumber.from("0");
+            });
           }),
-        ),
       );
+
       return estimates
         .reduce((acc: BigNumber, val: BigNumber) => acc.add(val), BigNumber.from("0"))
         .mul(await maxBaseFeeInFuture())
@@ -258,14 +281,10 @@ const Home: NextPage = () => {
   };
 
   const updateTotalGasEstimate = async () => {
-    if (!flashbotsProvider || !feeData || !feeData.gasPrice || sentTxHash.length == 0) return;
-    if (Object.keys(unsignedTxs).length == 0) setTotalGasEstimate(BigNumber.from("0"));
-    setTotalGasEstimate(await estimateTotalGasPrice());
+    if (!flashbotsProvider || !feeData || !feeData.gasPrice || sentTxHash.length > 0) return;
+    if (unsignedTxs.length == 0) setTotalGasEstimate(BigNumber.from("0"));
+    setTotalGasEstimate(await estimateTotalGasPrice(unsignedTxs));
   };
-
-  useEffect(() => {
-    updateTotalGasEstimate();
-  }, [Object.keys(unsignedTxs).length]);
 
   useInterval(() => {
     updateTotalGasEstimate();
@@ -518,7 +537,7 @@ const Home: NextPage = () => {
       await addRelayRPC(newBundleUuid);
 
       ////////// Cover the envisioned total gas fee from safe account
-      const totalGas = await estimateTotalGasPrice();
+      const totalGas = await estimateTotalGasPrice(unsignedTxs);
       await walletClient!.sendTransaction({
         to: hackedAddress as `0x${string}`,
         value: BigInt(totalGas.toString()),
@@ -547,14 +566,9 @@ const Home: NextPage = () => {
     }
 
     ////////// Sign the transactions in the basket one after another
-    const orderedTxIds = Object.keys(unsignedTxs)
-      .sort()
-      .map(a => parseInt(a));
-    const orderedTxHashes: string[] = [];
-
     try {
-      for (const txId of orderedTxIds) {
-        orderedTxHashes.push(await walletClient!.sendTransaction(unsignedTxs[txId].toSign));
+      for (const tx of unsignedTxs) {
+        await walletClient!.sendTransaction(tx.toSign);
       }
       setGasCovered(false);
       sendBundle();
@@ -1004,7 +1018,7 @@ const Home: NextPage = () => {
         </span>
 
         <button
-          style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
+          style={{ opacity: `${unsignedTxs.length > 0 ? 1 : 0}` }}
           className={`btn btn-sm mr-3 `}
           onClick={() => {
             setTryAgainModalOpen(false);
@@ -1014,7 +1028,7 @@ const Home: NextPage = () => {
           TRY AGAIN WITH SAME GAS
         </button>
         <button
-          style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
+          style={{ opacity: `${unsignedTxs.length > 0 ? 1 : 0}` }}
           className={`btn btn-sm mr-3 `}
           onClick={() => {
             setTryAgainModalOpen(false);
@@ -1032,7 +1046,7 @@ const Home: NextPage = () => {
     setSafeAddress("");
     setAccountsInputGiven(false);
 
-    setUnsignedTxs({});
+    setUnsignedTxs([]);
 
     setTotalGasEstimate(BigNumber.from("0"));
 
@@ -1064,35 +1078,11 @@ const Home: NextPage = () => {
     setBlockCountdown(0);
 
     setTryAgainModalOpen(false);
-
-    setLatestFetchedHackedAddress("");
-    setErc20ContractsAndBalances({});
-    setErc721ContractsAndOwnedTokens({});
-    setErc1155ContractsAndTokenIdsWithBalances({});
   };
 
   //////////////////////////////////////////
   //*********** Auto-detect assets
   //////////////////////////////////////////
-
-  const [latestFetchedHackedAddress, setLatestFetchedHackedAddress] = useLocalStorage<string>(
-    "latestFetchedHackedAddress",
-    "",
-  );
-
-  // contractAddress: balance
-  const [erc20ContractsAndBalances, setErc20ContractsAndBalances] = useLocalStorage<{ [address: string]: string }>(
-    "erc20ContractsAndBalances",
-    {},
-  );
-  // contractAddress: tokenId[]
-  const [erc721ContractsAndOwnedTokens, setErc721ContractsAndOwnedTokens] = useLocalStorage<{
-    [address: string]: string[];
-  }>("erc721ContractsAndOwnedTokens", {});
-  // contractAddress: { tokenId: balance }
-  const [erc1155ContractsAndTokenIdsWithBalances, setErc1155ContractsAndTokenIdsWithBalances] = useLocalStorage<{
-    [address: string]: { [tokenId: string]: string };
-  }>("erc1155ContractsAndTokenIdsWithBalances", {});
 
   const [alchemy] = useState<Alchemy>(
     new Alchemy({
@@ -1102,6 +1092,281 @@ const Home: NextPage = () => {
   );
 
   // Do the asset-fetching job
+
+  const addAutoDetectedAssetsToBasket = async () => {
+    if (!ethers.utils.isAddress(hackedAddress)) {
+      return;
+    }
+    if (!alchemy) {
+      alert("Seems Alchemy API rate limit has been reached. Contact irbozk@gmail.com");
+      return;
+    }
+
+    const erc20transfers: AssetTransfersResult[] = [],
+      erc721transfers: AssetTransfersResult[] = [],
+      erc1155transfers: AssetTransfersResult[] = [];
+
+    try {
+      (await fetchAllAssetTransfersOfHackedAccount()).forEach(tx => {
+        if (tx.category == AssetTransfersCategory.ERC20) {
+          erc20transfers.push(tx);
+        } else if (tx.category == AssetTransfersCategory.ERC721) {
+          erc721transfers.push(tx);
+        } else if (tx.category == AssetTransfersCategory.ERC1155) {
+          erc1155transfers.push(tx);
+        }
+      });
+
+      // Classify the fetched transfers
+
+      const erc20contracts = Array.from(
+        new Set(
+          erc20transfers.filter(tx => tx.rawContract.address != null).map(tx => tx.rawContract.address! as string),
+        ),
+      );
+
+      const erc721contractsAndTokenIds = erc721transfers.reduce(
+        (acc, tx) => {
+          const assetContractAddress = tx.rawContract.address;
+          const assetTokenId = tx.erc721TokenId;
+
+          if (!assetContractAddress || !assetTokenId) {
+            return acc;
+          }
+
+          if (!(assetContractAddress in acc)) {
+            acc[assetContractAddress] = new Set<string>();
+          }
+
+          acc[assetContractAddress].add(assetTokenId);
+          return acc;
+        },
+        {} as {
+          [address: string]: Set<string>;
+        },
+      );
+
+      const erc1155contractsAndTokenIds = erc1155transfers.reduce(
+        (acc, tx) => {
+          const assetContractAddress = tx.rawContract.address;
+          const assetMetadata = tx.erc1155Metadata;
+
+          if (!assetContractAddress || !assetMetadata) {
+            return acc;
+          }
+
+          if (!(assetContractAddress in acc)) {
+            acc[assetContractAddress] = new Set<string>();
+          }
+
+          assetMetadata.map(meta => meta.tokenId).forEach(tokenId => acc[assetContractAddress].add(tokenId));
+          return acc;
+        },
+        {} as {
+          [address: string]: Set<string>;
+        },
+      );
+
+      // Now get the balances & owned NFTs
+
+      const erc20BalancePromises = erc20contracts.map(async erc20contract => {
+        const balance = (await publicClient.readContract({
+          address: erc20contract as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [hackedAddress],
+        })) as string;
+        if (!balance || balance.toString() == "0") {
+          return [];
+        }
+        return [erc20contract, balance.toString()];
+      });
+
+      const erc721OwnershipPromises = Object.keys(erc721contractsAndTokenIds).map(async erc721Contract => {
+        const ownedTokenIds = await Promise.all(
+          Array.from(erc721contractsAndTokenIds[erc721Contract]).map(async tokenId => {
+            const ownerOfGivenTokenId = await publicClient.readContract({
+              address: erc721Contract as `0x${string}`,
+              abi: ERC721_ABI,
+              functionName: "ownerOf",
+              args: [BigNumber.from(tokenId)],
+            });
+            if (!ownerOfGivenTokenId || ownerOfGivenTokenId != hackedAddress) {
+              return undefined;
+            }
+            return tokenId;
+          }),
+        );
+        const ownedTokenIdsFiltered = ownedTokenIds.filter(tokenId => tokenId != undefined) as string[];
+        if (ownedTokenIdsFiltered.length == 0) {
+          return [];
+        }
+        return [erc721Contract, ownedTokenIdsFiltered];
+      });
+
+      const erc1155OwnershipPromises = Object.keys(erc1155contractsAndTokenIds).map(async erc1155Contract => {
+        const tokenIdsWithinContract = Array.from(erc1155contractsAndTokenIds[erc1155Contract]);
+        const tokenIdBalances = (await publicClient.readContract({
+          address: erc1155Contract as `0x${string}`,
+          abi: ERC1155_ABI,
+          functionName: "balanceOfBatch",
+          args: [Array(tokenIdsWithinContract.length).fill(hackedAddress), tokenIdsWithinContract],
+        })) as bigint[];
+
+        const tokenIdsAndBalances: string[][] = [];
+        for (let i = 0; i < tokenIdBalances.length; i++) {
+          if (tokenIdBalances[i] == 0n) {
+            continue;
+          }
+          tokenIdsAndBalances.push([tokenIdsWithinContract[i], tokenIdBalances[i].toString()]);
+        }
+        if (tokenIdsAndBalances.length == 0) {
+          return [];
+        }
+
+        return [erc1155Contract, Object.fromEntries(tokenIdsAndBalances)];
+      });
+
+      // Await all the promises
+
+      const { erc20ContractsAndBalances, erc721ContractsAndOwnedTokens, erc1155ContractsAndTokenIdsWithBalances } =
+        await Promise.all([
+          (await Promise.all(erc20BalancePromises)).filter(a => a.length > 0),
+          (await Promise.all(erc721OwnershipPromises)).filter(a => a.length > 0),
+          (await Promise.all(erc1155OwnershipPromises)).filter(a => a.length > 0),
+        ]).then(([erc20res, erc721res, erc1155res]) => {
+          return {
+            erc20ContractsAndBalances: Object.fromEntries(erc20res) as AutoDetectedERC20Info,
+            erc721ContractsAndOwnedTokens: Object.fromEntries(erc721res) as AutoDetectedERC721Info,
+            erc1155ContractsAndTokenIdsWithBalances: Object.fromEntries(erc1155res) as AutoDetectedERC1155Info,
+          };
+        });
+
+      // Fetch token symbols and save results
+
+      const autoDetectedErc20Txs: ERC20Tx[] = await Promise.all(
+        Object.entries(erc20ContractsAndBalances).map(async ([erc20contract, erc20balance]) => {
+          let tokenSymbol = "???";
+          try {
+            tokenSymbol = (await publicClient.readContract({
+              address: erc20contract as `0x${string}`,
+              abi: ERC20_ABI,
+              functionName: "symbol",
+              args: [],
+            })) as string;
+          } catch (e) {
+            /* ignore */
+          }
+
+          const newErc20tx: ERC20Tx = {
+            type: "erc20",
+            info: `ERC20 - ${tokenSymbol != "???" ? `${tokenSymbol}` : `${erc20contract}`}`,
+            symbol: tokenSymbol,
+            amount: erc20balance,
+            toSign: {
+              from: hackedAddress as `0x${string}`,
+              to: erc20contract as `0x${string}`,
+              data: erc20Interface.encodeFunctionData("transfer", [
+                safeAddress,
+                BigNumber.from(erc20balance),
+              ]) as `0x${string}`,
+            },
+          };
+          return newErc20tx;
+        }),
+      );
+
+      const autoDetectedErc721Txs: ERC721Tx[] = (
+        await Promise.all(
+          Object.entries(erc721ContractsAndOwnedTokens).map(async ([erc721contract, ownedTokenIds]) => {
+            let tokenSymbol = "???";
+            try {
+              tokenSymbol = (await publicClient.readContract({
+                address: erc721contract as `0x${string}`,
+                abi: ERC721_ABI,
+                functionName: "symbol",
+                args: [],
+              })) as string;
+            } catch (e) {
+              /* ignore */
+            }
+
+            const newErc721txs: ERC721Tx[] = ownedTokenIds.map(tokenId => {
+              const newErc721tx: ERC721Tx = {
+                type: "erc721",
+                info: `ERC721 - ${tokenSymbol != "???" ? `${tokenSymbol}` : `${erc721contract}`}`,
+                symbol: tokenSymbol,
+                tokenId: parseInt(tokenId).toString(),
+                toSign: {
+                  from: hackedAddress as `0x${string}`,
+                  to: erc721contract as `0x${string}`,
+                  data: erc721Interface.encodeFunctionData("transferFrom", [
+                    hackedAddress,
+                    safeAddress,
+                    BigNumber.from(tokenId),
+                  ]) as `0x${string}`,
+                },
+              };
+              return newErc721tx;
+            });
+            return newErc721txs;
+          }),
+        )
+      ).flat();
+
+      const autoDetectedErc1155Txs: ERC1155Tx[] = await Promise.all(
+        Object.entries(erc1155ContractsAndTokenIdsWithBalances).map(async ([erc1155contract, tokenIdsAndBalances]) => {
+          let uri = "???";
+          try {
+            uri = (await publicClient.readContract({
+              address: erc1155contract as `0x${string}`,
+              abi: ERC1155_ABI,
+              functionName: "uri",
+              args: [0],
+            })) as string;
+          } catch (e) {
+            /* ignore */
+          }
+
+          const tokenIds = Object.keys(tokenIdsAndBalances);
+          const balances: string[] = [];
+          for (let i = 0; i < tokenIds.length; i++) {
+            balances.push(tokenIdsAndBalances[tokenIds[i]]);
+          }
+
+          const newErc1155Tx: ERC1155Tx = {
+            type: "erc1155",
+            info: `ERC1155 - ${uri != "???" ? `${uri}` : `${erc1155contract}`}`,
+            uri: "changeme",
+            tokenIds: tokenIds,
+            amounts: balances,
+            toSign: {
+              from: hackedAddress as `0x${string}`,
+              to: erc1155contract as `0x${string}`,
+              data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [
+                hackedAddress,
+                safeAddress,
+                tokenIds,
+                balances,
+                ethers.constants.HashZero,
+              ]) as `0x${string}`,
+            },
+          };
+          return newErc1155Tx;
+        }),
+      );
+
+      const unsignedTxsInitializationVector = [
+        ...autoDetectedErc20Txs,
+        ...autoDetectedErc721Txs,
+        ...autoDetectedErc1155Txs,
+      ];
+      setUnsignedTxs(unsignedTxsInitializationVector);
+      await estimateTotalGasPrice(unsignedTxsInitializationVector);
+    } catch (e) {
+      console.error(`Error fetching assets of hacked account: ${e}`);
+    }
+  };
 
   const fetchAllAssetTransfersOfHackedAccount = async () =>
     (
@@ -1120,191 +1385,6 @@ const Home: NextPage = () => {
     )
       .map(res => res.transfers)
       .flat();
-
-  useEffect(() => {
-    if (!ethers.utils.isAddress(hackedAddress)) {
-      return;
-    }
-    if (hackedAddress == latestFetchedHackedAddress) {
-      return;
-    }
-    if (!alchemy) {
-      alert("Seems Alchemy API rate limit has been reached. Contact irbozk@gmail.com");
-      return;
-    }
-
-    const erc20transfers: AssetTransfersResult[] = [],
-      erc721transfers: AssetTransfersResult[] = [],
-      erc1155transfers: AssetTransfersResult[] = [];
-
-    try {
-      (async () => {
-        (await fetchAllAssetTransfersOfHackedAccount()).forEach(tx => {
-          if (tx.category == AssetTransfersCategory.ERC20) {
-            erc20transfers.push(tx);
-          } else if (tx.category == AssetTransfersCategory.ERC721) {
-            erc721transfers.push(tx);
-          } else if (tx.category == AssetTransfersCategory.ERC1155) {
-            erc1155transfers.push(tx);
-          }
-        });
-
-        // Classify the fetched transfers
-
-        const erc20contracts = Array.from(
-          new Set(
-            erc20transfers.filter(tx => tx.rawContract.address != null).map(tx => tx.rawContract.address! as string),
-          ),
-        );
-
-        const erc721contractsAndTokenIds = erc721transfers.reduce(
-          (acc, tx) => {
-            const assetContractAddress = tx.rawContract.address;
-            const assetTokenId = tx.erc721TokenId;
-
-            if (!assetContractAddress || !assetTokenId) {
-              return acc;
-            }
-
-            if (!(assetContractAddress in acc)) {
-              acc[assetContractAddress] = new Set<string>();
-            }
-
-            acc[assetContractAddress].add(assetTokenId);
-            return acc;
-          },
-          {} as {
-            [address: string]: Set<string>;
-          },
-        );
-
-        const erc1155contractsAndTokenIds = erc1155transfers.reduce(
-          (acc, tx) => {
-            const assetContractAddress = tx.rawContract.address;
-            const assetMetadata = tx.erc1155Metadata;
-
-            if (!assetContractAddress || !assetMetadata) {
-              return acc;
-            }
-
-            if (!(assetContractAddress in acc)) {
-              acc[assetContractAddress] = new Set<string>();
-            }
-
-            assetMetadata.map(meta => meta.tokenId).forEach(tokenId => acc[assetContractAddress].add(tokenId));
-            return acc;
-          },
-          {} as {
-            [address: string]: Set<string>;
-          },
-        );
-
-        // Now get the balances & owned NFTs
-
-        const erc20BalancePromises = erc20contracts.map(async erc20contract => {
-          const balance = (await publicClient.readContract({
-            address: erc20contract as `0x${string}`,
-            abi: ERC20_ABI,
-            functionName: "balanceOf",
-            args: [hackedAddress],
-          })) as string;
-          if (!balance || balance.toString() == "0") {
-            return [];
-          }
-          return [erc20contract, balance.toString()];
-        });
-
-        const erc721OwnershipPromises = Object.keys(erc721contractsAndTokenIds).map(async erc721Contract => {
-          const ownedTokenIds = await Promise.all(
-            Array.from(erc721contractsAndTokenIds[erc721Contract]).map(async tokenId => {
-              const ownerOfGivenTokenId = await publicClient.readContract({
-                address: erc721Contract as `0x${string}`,
-                abi: ERC721_ABI,
-                functionName: "ownerOf",
-                args: [BigNumber.from(tokenId)],
-              });
-              if (!ownerOfGivenTokenId || ownerOfGivenTokenId != hackedAddress) {
-                return undefined;
-              }
-              return tokenId;
-            }),
-          );
-          const ownedTokenIdsFiltered = ownedTokenIds.filter(tokenId => tokenId != undefined) as string[];
-          if (ownedTokenIdsFiltered.length == 0) {
-            return [];
-          }
-          return [erc721Contract, ownedTokenIdsFiltered];
-        });
-
-        const erc1155OwnershipPromises = Object.keys(erc1155contractsAndTokenIds).map(async erc1155Contract => {
-          const tokenIdsWithinContract = Array.from(erc1155contractsAndTokenIds[erc1155Contract]);
-          const tokenIdBalances = (await publicClient.readContract({
-            address: erc1155Contract as `0x${string}`,
-            abi: ERC1155_ABI,
-            functionName: "balanceOfBatch",
-            args: [Array(tokenIdsWithinContract.length).fill(hackedAddress), tokenIdsWithinContract],
-          })) as bigint[];
-
-          const tokenIdsAndBalances: string[][] = [];
-          for (let i = 0; i < tokenIdBalances.length; i++) {
-            if (tokenIdBalances[i] == 0n) {
-              continue;
-            }
-            tokenIdsAndBalances.push([tokenIdsWithinContract[i], tokenIdBalances[i].toString()]);
-          }
-          if (tokenIdsAndBalances.length == 0) {
-            return [];
-          }
-
-          return [erc1155Contract, Object.fromEntries(tokenIdsAndBalances)];
-        });
-
-        // Await all the promises
-
-        const [erc20ContractsAndBalances, erc721ContractsAndOwnedTokens, erc1155ContractsAndTokenIdsWithBalances] =
-          await Promise.all([
-            (await Promise.all(erc20BalancePromises)).filter(a => a.length > 0),
-            (await Promise.all(erc721OwnershipPromises)).filter(a => a.length > 0),
-            (await Promise.all(erc1155OwnershipPromises)).filter(a => a.length > 0),
-          ]).then(([erc20res, erc721res, erc1155res]) => [
-            Object.fromEntries(erc20res),
-            Object.fromEntries(erc721res),
-            Object.fromEntries(erc1155res),
-          ]);
-
-        // Save the results
-
-        console.log("ASSETS FETCHED SUCCESSFULLY");
-        setErc20ContractsAndBalances(erc20ContractsAndBalances);
-        setErc721ContractsAndOwnedTokens(erc721ContractsAndOwnedTokens);
-        setErc1155ContractsAndTokenIdsWithBalances(erc1155ContractsAndTokenIdsWithBalances);
-
-        setLatestFetchedHackedAddress(hackedAddress);
-      })();
-    } catch (e) {
-      console.error(`Error fetching assets of hacked account: ${e}`);
-    }
-  }, [hackedAddress]);
-
-  // Add the fetched assets to the basket
-
-  useEffect(() => {
-    if (
-      !ethers.utils.isAddress(hackedAddress) ||
-      !ethers.utils.isAddress(safeAddress) ||
-      hackedAddress != latestFetchedHackedAddress ||
-      (Object.keys(erc20ContractsAndBalances).length == 0 &&
-        Object.keys(erc721ContractsAndOwnedTokens).length == 0 &&
-        Object.keys(erc1155ContractsAndTokenIdsWithBalances).length == 0)
-    ) {
-      return;
-    }
-  }, [safeAddress, hackedAddress]);
-
-  console.log("zürten");
-  console.log(erc20ContractsAndBalances);
-  console.log(erc721ContractsAndOwnedTokens);
-  console.log(erc1155ContractsAndTokenIdsWithBalances);
 
   return (
     <>
@@ -1387,7 +1467,7 @@ const Home: NextPage = () => {
                       setUnsignedTxs([]);
                       setTotalGasEstimate(BigNumber.from("0"));
                     }}
-                    style={{ opacity: `${Object.keys(unsignedTxs).length > 0 ? 1 : 0}` }}
+                    style={{ opacity: `${unsignedTxs.length > 0 ? 1 : 0}` }}
                     className="btn btn-sm btn-primary text-sm ml-3"
                   >
                     clear🧺
@@ -1396,7 +1476,7 @@ const Home: NextPage = () => {
                   {totalGasEstimationDisplay}
 
                   <button
-                    disabled={gasCovered || !!sentTxHash || Object.keys(unsignedTxs).length == 0}
+                    disabled={gasCovered || !!sentTxHash || unsignedTxs.length == 0 || !accountsInputGiven}
                     className={`btn btn-sm mr-3 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-none`}
                     onClick={coverGas}
                   >

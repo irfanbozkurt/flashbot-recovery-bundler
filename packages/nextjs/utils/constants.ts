@@ -16,6 +16,19 @@ export const ERC721_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "symbol",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     constant: false,
     inputs: [
       { internalType: "address", name: "to", type: "address" },
@@ -81,6 +94,25 @@ export const ERC721_ABI = [
 ];
 
 export const ERC1155_ABI = [
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "uri",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
   {
     inputs: [
       { internalType: "contract ENS", name: "_ens", type: "address" },
@@ -685,6 +717,19 @@ export const ERC1155InterfaceId = "0xd9b67a26";
 export const ERC721InterfaceId = "0x80ac58cd";
 
 export const ERC20_ABI = [
+  {
+    inputs: [],
+    name: "symbol",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
   {
     constant: false,
     inputs: [

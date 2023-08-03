@@ -32,4 +32,16 @@ export interface ERC1155Tx extends ExtendedUnsignedTx {
 
 export type RecoveryTx = CustomTx | ERC20Tx | ERC721Tx | ERC1155Tx;
 
-export type UnsignedTxs = { [index: number]: RecoveryTx };
+export interface AutoDetectedERC20Info {
+  [contractAddress: string]: string; // address: balance
+}
+
+export interface AutoDetectedERC721Info {
+  [contractAddress: string]: string[]; // address: tokenId[]
+}
+
+export interface AutoDetectedERC1155Info {
+  [contractAddress: string]: {
+    [tokenId: string]: string; // tokenId: balance
+  };
+}
