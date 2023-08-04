@@ -2,16 +2,16 @@
 
 _Thanks to Austin Griffith for suggesting this build, Elliot Alexander for their support, and lcfr.eth for inspiration [bundler.lcfr.io](https://bundler.lcfr.io/)_
 
-Live demo on Goerli: [flashbot-recovery-bundler.vercel.app](https://flashbot-recovery-bundler.vercel.app/)
+Live on mainnet: [flashbot-recovery-bundler.vercel.app](https://flashbot-recovery-bundler.vercel.app/)
 
 Flashbots have several use cases and it can be hard for beginners to correctly interact with them to save their compromised assets. flashbot-recovery-bundler provides an instructive & beginner-friendly interface to create Flashbot bundles following a whitehat recovery scheme.
 
 Here's a sneak peek on how this works:
+
 - Accepts one funding account to pay for the gas and acquire the locked assets, and one compromised account
 - Lets user create a list of recovery transactions (supports ERC20, 721, and 1155 interfaces + a custom call crafter),
 - Directs user to help handle the complexities of adding a flashbot RPC network, account switching, and transaction signing processes at correct steps
 - Keeps track of the submitted transactions to inform the user upon success or failure, and guides the user with what can be done in case of failure
-
 
 ## Story and Caveats
 
@@ -20,6 +20,7 @@ Compromised accounts need some funding to pay for the gas, so that they can tran
 Flashbots operate on their own RPC network in which they receive bundles of transactions and they can push these bundles to Ethereum network without exposing individual transfers in the mempool. This prevents malicious actors from sniffing the intermediary funding transactions, making white hat recoveries possible.
 
 See the following links, but beware Flashbots have many use cases, so don't get lost within
+
 - [About FlashBots](https://docs.flashbots.net/)
 - [Understanding Bundles](https://docs.flashbots.net/flashbots-auction/searchers/advanced/understanding-bundles)
 
@@ -29,18 +30,19 @@ Another point to note is these transactions won't be listed on Etherscan, and de
 
 ## How it works
 
-flashbot-recovery-bundler introduces the concept of **recovery basket**, which is a list of transactions **from the compromised account to asset contract accounts**. Building these transactions and adding them the basket does not require wallet interaction, as it purely happens at the front-end. 
+flashbot-recovery-bundler introduces the concept of **recovery basket**, which is a list of transactions **from the compromised account to asset contract accounts**. Building these transactions and adding them the basket does not require wallet interaction, as it purely happens at the front-end.
 
 When the basket is done, we get an accurate estimation on the gas price. This gas price has nothing to do with the priority fee, and purely represents the total gas price to be paid to Ethereum validators. This estimation is crucial because should any transaction in the basket fail, the whole bundle fails.
 
-Users can then **start signing**, and the front-end will start a sequence of events consisting of 
-* Switching to a personal Flashbot RPC,
-* Switching to the funding account,
-* Signing the gas-funding transaction,
-* Switching to the compromised account,
-* Signing all the recovery transactions one by one,
-* Submitting the bundle,
-* Watching the transactions and inform upon success or failure
+Users can then **start signing**, and the front-end will start a sequence of events consisting of
+
+- Switching to a personal Flashbot RPC,
+- Switching to the funding account,
+- Signing the gas-funding transaction,
+- Switching to the compromised account,
+- Signing all the recovery transactions one by one,
+- Submitting the bundle,
+- Watching the transactions and inform upon success or failure
 
 ## Handling priority fees
 
@@ -52,11 +54,9 @@ You will now you didn't set a nice bid when your bundle fails, and in that case,
 
 If the compromised account or the funding account has any pending transactions in the wallet, please **clear activity data**. Otherwise when you join a new personal Flashbot RPC network, these unwanted transactions will also be included in the new bundle you're trying to build. This can cause trouble and be hard to debug.
 
-
 ## Walkthrough
 
 Here we provide a detailed walkthrough and explanations to each step.
-
 
 <details>
 <summary>Entering the safe / funding account & compromised / hacked account</summary>
@@ -102,9 +102,7 @@ NFTs will require a transfer transaction for every NFT owned by the hacked accou
 
 ![ERC721-2](/assets/ERC721-2.png)
 
-
 </details>
-
 
 <details>
 <summary>Adding an ERC1155 recovery transaction</summary>
@@ -115,10 +113,7 @@ ERC1155 supports batch transfer, and user needs to input the token IDs in a **co
 
 ![ERC1155-1](/assets/ERC1155-1.png)
 
-
-
 </details>
-
 
 <details>
 <summary>Adding a custom transaction</summary>
@@ -137,16 +132,14 @@ Here user has the freedom to provide the arguments as they wish, but they need t
 
 </details>
 
-
 <details>
 <summary>Signing all the transactions</summary>
 
 <br>
 
-After the basket is complete, it's time to sign the transactions. 
+After the basket is complete, it's time to sign the transactions.
 
 ![Signing-1](/assets/Signing-1.png)
-
 
 Once the user clicks 'start signing', a sequence of events will happen, and a sequence of modals will direct the user on what to do.
 
@@ -160,7 +153,7 @@ Click anywhere but the modal to close the modal. This will trigger the next acti
 
 ![Signing-4](/assets/Signing-4.png)
 
-If you mistakenly 'cancel' the network switch, you might mess the flow, so you should reject the following wallet prompt as well. Assuming you didn't, the next step is signing the gas fee transfer transaction. 
+If you mistakenly 'cancel' the network switch, you might mess the flow, so you should reject the following wallet prompt as well. Assuming you didn't, the next step is signing the gas fee transfer transaction.
 
 Here click on 'Advanced' to provide a custom priority fee, gas limit, and max base fee:
 
@@ -172,7 +165,7 @@ Upon confirmation, a modal will ask user to connect their hacked account, becaus
 
 ![Signing-6](/assets/Signing-6.png)
 
-Now open the wallet and connect the hacked account. Then you should manually click on the backdrop to close the modal. 
+Now open the wallet and connect the hacked account. Then you should manually click on the backdrop to close the modal.
 
 ![Signing-7](/assets/Signing-7.png)
 
@@ -185,8 +178,6 @@ Once you confirm all the transactions, a modal will pop up, and it will display 
 Now wait without refreshing the page until success or failure.
 
 </details>
-
-
 
 <details>
 <summary>Upon Success</summary>
@@ -204,7 +195,7 @@ If the bundle gets included in a block, a modal will tell in which block it was 
 
 <br>
 
-There are many reasons why the bundle wasn't included. It's usually that all the other people interacting with the Flashbot bid higher than you did, or that you included a transaction that failed for any reason (and you won't know which and why). 
+There are many reasons why the bundle wasn't included. It's usually that all the other people interacting with the Flashbot bid higher than you did, or that you included a transaction that failed for any reason (and you won't know which and why).
 
 Failure cases can be a pain in the ass, but if you're sure you crafted the transactions carefully, the first thing to try is providing higher priority fee, higher max base fee, under a higher gas limit. This will require you to sign all the transactions again, so that you can re-set these configurations.
 
@@ -230,8 +221,8 @@ Again, do this for both your accounts. Then switch to the safe account to return
 
 If you think the front-end does not behave logically, you might have messed with the state. The build uses local storage, so clearing the cookies and refreshing the page helps.
 
-
 ## Local Development
+
 ⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, and Typescript.
 
 Before you begin, you need to install the following tools:
