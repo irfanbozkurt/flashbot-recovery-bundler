@@ -32,13 +32,16 @@ import {
 import { ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
-const BLOCKS_IN_THE_FUTURE = 10;
-
 const flashbotSigner = ethers.Wallet.createRandom();
 
 const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
+
+const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
+  1: 7,
+  5: 10,
+};
 
 const Home: NextPage = () => {
   const targetNetwork = getTargetNetwork();
@@ -54,6 +57,7 @@ const Home: NextPage = () => {
   //////////////////////////////////////////
   const FLASHBOTS_RELAY_ENDPOINT = `https://relay${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net/`;
   const [flashbotsProvider, setFlashbotsProvider] = useState<FlashbotsBundleProvider>();
+
   useEffect(() => {
     (async () => {
       if (!targetNetwork || !targetNetwork.blockExplorers) return;
@@ -72,7 +76,6 @@ const Home: NextPage = () => {
             new ethers.providers.InfuraProvider(targetNetwork.id),
             flashbotSigner,
             FLASHBOTS_RELAY_ENDPOINT,
-            "goerli",
           ),
         );
       }
@@ -239,7 +242,7 @@ const Home: NextPage = () => {
     const block = await publicClient.getBlock({ blockNumber: blockNumberNow });
     return FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(
       BigNumber.from(block.baseFeePerGas),
-      BLOCKS_IN_THE_FUTURE,
+      BLOCKS_IN_THE_FUTURE[targetNetwork.id],
     );
   };
 
@@ -328,7 +331,7 @@ const Home: NextPage = () => {
         setSentBlock(parseInt((await publicClient.getBlockNumber()).toString()));
 
         const currentUrl = window.location.href.replace("?", "");
-        await fetch(currentUrl + `api/relay${targetNetwork.network == "goerli" ? "-goerli" : ""}`, {
+        const response = await fetch(currentUrl + `api/relay${targetNetwork.network == "goerli" ? "-goerli" : ""}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -337,6 +340,8 @@ const Home: NextPage = () => {
             txs,
           }),
         });
+
+        alert(await response.json());
       } catch (e) {
         console.error(e);
         setSentTxHash("");
@@ -356,7 +361,7 @@ const Home: NextPage = () => {
     try {
       if (!sentTxHash || sentBlock == 0) return;
 
-      const finalTargetBlock = sentBlock + BLOCKS_IN_THE_FUTURE;
+      const finalTargetBlock = sentBlock + BLOCKS_IN_THE_FUTURE[targetNetwork.id];
       const currentBlock = parseInt((await publicClient.getBlockNumber()).toString());
       const blockDelta = finalTargetBlock - currentBlock;
       setBlockCountdown(blockDelta);
@@ -1011,7 +1016,9 @@ const Home: NextPage = () => {
       ariaHideApp={false}
     >
       <div style={{ maxWidth: "800px" }} className="flex flex-col gap-y-3 justify-center items-center">
-        <span className="text-2xl">Bundle not included in the last {BLOCKS_IN_THE_FUTURE} blocks</span>
+        <span className="text-2xl">
+          Bundle not included in the last {BLOCKS_IN_THE_FUTURE[targetNetwork.id]} blocks
+        </span>
         <span className="text-2xl">
           You can try again with same gas, but ideally you should clear activity data for funding and hacked accounts,
           and re-sign the transactions with higher max base fee and priority fee.
