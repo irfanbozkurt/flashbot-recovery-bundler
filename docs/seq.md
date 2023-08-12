@@ -6,6 +6,8 @@ Refers to sequence of occurances from the moment user faces the interface to hav
 sequenceDiagram
     actor User
 
+	Note over User: Switches to safe account
+
     participant Bundler UI
     participant Chain Indexer
 	participant Chain Provider
@@ -159,8 +161,6 @@ This phase requires a set of activities that can be confusing to a web3 beginner
 ```mermaid
 sequenceDiagram
     actor User
-
-	Note over User: Switches to safe account
 
     participant Bundler UI
 	participant Wallet
