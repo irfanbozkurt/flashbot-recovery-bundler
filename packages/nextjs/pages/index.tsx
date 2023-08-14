@@ -606,7 +606,8 @@ const Home: NextPage = () => {
               decimals: 18,
             },
             rpcUrls: [
-              `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
+              `http://127.0.0.1:3005/api/rpc-goerli?bundle=${bundleUuid}`,
+              //`https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
             ],
             blockExplorerUrls: [`https://${targetNetwork.network == "goerli" ? "goerli." : ""}etherscan.io`],
           },
