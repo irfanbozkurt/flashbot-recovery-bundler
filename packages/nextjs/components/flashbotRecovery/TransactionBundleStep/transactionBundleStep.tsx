@@ -1,77 +1,84 @@
-import React, { useState } from "react";
-import Image from "next/image";
-import LogoSvg from "../../../public/assets/flashbotRecovery/logo.svg";
+import React, { Dispatch, SetStateAction } from "react";
 import styles from "./transactionBundleStep.module.css";
 import { AnimatePresence, motion } from "framer-motion";
+import { RecoveryTx } from "~~/types/business";
 
 interface IProps {
   isVisible: boolean;
+  clear:() => void;
+  transactions: RecoveryTx[];
+  onAddMore:() => void;
+  modifyTransactions:Dispatch<SetStateAction<RecoveryTx[]>>
 }
-export const TransactionBundleStep = ({ isVisible }: IProps) => {
-  const [selectedAssets, setSelectedAssets] = useState<number[]>([]);
-  const list = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+export const TransactionBundleStep = ({ clear,onAddMore, isVisible, transactions, modifyTransactions }: IProps) => {
+  if (!isVisible) {
+    return <></>;
+  }
 
-  const onAssetSelected = (i: number) => {
-    const currentIndex = selectedAssets.indexOf(i);
-    let newAssets: number[] = [];
-    if (currentIndex === -1) {
-      newAssets.push(i);
-      newAssets.push(...selectedAssets);
-    } else {
-      newAssets = selectedAssets.filter(item => item !== i);
-    }
-    setSelectedAssets(newAssets);
+
+  const removeUnsignedTx = (txId: number) => {
+    modifyTransactions((prev: RecoveryTx[]) => {
+      if (txId < 0 || txId > prev.length) {
+        return prev.filter(a => a);
+      }
+      delete prev[txId];
+
+      const newUnsignedTxArr = prev.filter(a => a);
+      return newUnsignedTxArr;
+    });
   };
 
+
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className={styles.container}
-        >
-          <h2 className={styles.title}>Your transactions</h2>
-          <div className={styles.assetList}>
-            {list.map((item, i) => (
-              <TransactionItem
-                isSelected={selectedAssets.indexOf(i) != -1}
-                key={i}
-                onDelete={() => onAssetSelected(i)}
-                title={i%2 === 0 ? "Custom call (transfer) to 0x24923bah971904020q9q98198y83": "NFT recovery for tokenID 1"}
-              />
-            ))}
-          </div>
-          <span className={styles.clear}>Clear all</span>
-          <div className="m-2"></div>
-          <button className={`${styles.button} btn btn-accent`}>Add manually</button>
-          <div className="m-2"></div>
-          <button className={`${styles.button} btn btn-primary`}>Start Signing</button>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
+      <h2 className={styles.title}>Your transactions</h2>
+      <div className={styles.assetList}>
+        {transactions.map((item, i) => {
+          return <TransactionItem key={i} onDelete={() => removeUnsignedTx(i)} tx={item} />;
+        })}
+      </div>
+      <span className={styles.clear} onClick={() => clear()}>Clear all</span>
+      <div className="m-2"></div>
+      <button className={`${styles.button} btn btn-accent btn-xs`} onClick={() => onAddMore()}>Add</button>
+      <div className="m-2"></div>
+      <button className={`${styles.button} btn btn-primary`}>Start Signing</button>
+    </motion.div>
   );
 };
 
 interface ITransactionProps {
   onDelete: () => void;
-  isSelected: boolean;
-  title: string;
+  tx?: RecoveryTx;
 }
 
-const TransactionItem = ({ onDelete, title }: ITransactionProps) => {
+const TransactionItem = ({ onDelete, tx }: ITransactionProps) => {
+
+
+  const getTitle = () => {
+    if (!tx) {
+      return "";
+    }
+    if (["erc1155", "erc721"].indexOf(tx.type) != -1) {
+      //@ts-ignore
+      return `${tx.info} (${tx.tokenId!})`;
+    }
+    if (tx.type === "erc20") {
+      //@ts-ignore
+      return `${tx.value} ${tx.symbol} `;
+    }
+    return tx.info;
+  };
+ 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      onClick={() => onDelete()}
       className={`${styles.assetItem} bg-base-200 text-secondary-content`}
     >
       <div className={styles.data}>
-        <h3>{title}</h3>
+        <h3>{getTitle()}</h3>
       </div>
-      <div className={`${styles.logoContainer}`}>X</div>
+      <div className={`${styles.close}`} onClick={() => onDelete()}>X</div>
     </motion.div>
   );
 };
