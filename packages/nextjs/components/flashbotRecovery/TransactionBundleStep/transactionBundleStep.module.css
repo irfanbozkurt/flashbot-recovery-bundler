@@ -19,6 +19,7 @@
     display: flex;
     height: 42px;
     max-width: 600px;
+    width: 90%;
     margin: 0 auto;
     cursor: pointer;
     border-radius: 4px;
@@ -39,7 +40,8 @@ font-weight: 500;
 }
 .assetList{
     width: 100%;
-    max-height: calc(100vh - 400px);
+    max-height: calc(100vh - 500px);
+    height: calc(100vh - 500px);
     overflow: auto;
     margin: 36px 0;
     margin-bottom: 0;
@@ -73,7 +75,7 @@ font-weight: 500;
     margin-right: 16px;
 }
 
-.logoContainer{
+.close{
     display: flex;
     flex-direction: column;
     justify-content: center;

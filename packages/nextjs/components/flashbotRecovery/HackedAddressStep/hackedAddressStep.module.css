@@ -16,6 +16,7 @@ margin-bottom: 12px;
 }
 .container > div{
     border-radius: 4px;
+    padding: 4px;
 }
 .button{
     width: 200px;

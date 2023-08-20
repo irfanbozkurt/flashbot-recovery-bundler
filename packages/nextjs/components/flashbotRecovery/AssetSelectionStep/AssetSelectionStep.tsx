@@ -1,68 +1,139 @@
-import React, { useState } from "react";
-import styles from "./assetSelectionStep.module.css";
-import { AnimatePresence, motion } from "framer-motion";
-import LogoSvg from "../../../public/assets/flashbotRecovery/logo.svg";
-
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import LogoSvg from "../../../public/assets/flashbotRecovery/logo.svg";
+import styles from "./assetSelectionStep.module.css";
+import { motion } from "framer-motion";
+import { useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
+import { RecoveryTx } from "~~/types/business";
 
 interface IProps {
   isVisible: boolean;
+  hackedAddress: string;
+  safeAddress: string;
+  onSubmit: (txs: RecoveryTx[]) => void;
 }
-export const AssetSelectionStep = ({ isVisible }: IProps) => {
-  const [selectedAssets, setSelectedAssets] = useState<number[]>([])
-  const list = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAddress }: IProps) => {
 
-
-  const onAssetSelected = (i:number) => {
-    const currentIndex = selectedAssets.indexOf(i);
-    let newAssets:number[] = [];
-    if(currentIndex === -1){
-      newAssets.push(i)
-      newAssets.push(...selectedAssets)
-    }else{
-      newAssets = selectedAssets.filter(item => item !== i)
+  const { getAutodetectedAssets } = useAutodetectAssets();
+  const [selectedAssets, setSelectedAssets] = useState<number[]>([]);
+  const [accountAssets, setAccountAssets] = useState<RecoveryTx[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const onAssetSelected = (index: number) => {
+    const currentIndex = selectedAssets.indexOf(index);
+    let newAssets: number[] = [];
+    if (currentIndex === -1) {
+      newAssets.push(index);
+      newAssets.push(...selectedAssets);
+    } else {
+      newAssets = selectedAssets.filter(item => item !== index);
     }
     setSelectedAssets(newAssets);
+  };
+
+  useEffect(() => {
+    if (accountAssets.length > 0 || !isVisible) {
+      return;
+    }
+    init();
+  }, [isVisible]);
+
+  const init = async () => {
+    const result = await getAutodetectedAssets({ hackedAddress, safeAddress });
+    if (!result) {
+      return;
+    }
+    setAccountAssets(result);
+    setIsLoading(false);
+  };
+
+  const onAddAssetsClick = () => {
+    const txsToAdd = accountAssets.filter((item, i) => selectedAssets.indexOf(i) != -1);
+    onSubmit(txsToAdd);
+  };
+  if (!isVisible) {
+    return <></>;
   }
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className={styles.container}
-        >
-          <h2 className={styles.title}>Your assets</h2>
-          <div className={styles.assetList}>
-            {list.map((item, i) => <AssetItem isSelected={selectedAssets.indexOf(i) != -1} key={i} onClick={() => onAssetSelected(i)}/>)}
-          </div>
-          <button className={`${styles.button} btn btn-primary btn-xs`}>Add</button>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
+      <h2 className={styles.title}>Your assets</h2>
+
+      <div className={styles.assetList}>
+        {!!isLoading
+          ? [1, 2, 3].map((item, i) => (
+              <AssetItem
+                isLoading={true}
+                isSelected={selectedAssets.indexOf(i) != -1}
+                key={i}
+                onClick={() => onAssetSelected(i)}
+              />
+            ))
+          : accountAssets.map((item, i) => {
+              return (
+                <AssetItem
+                  tx={item}
+                  isLoading={false}
+                  isSelected={selectedAssets.indexOf(i) != -1}
+                  key={i}
+                  onClick={() => onAssetSelected(i)}
+                />
+              );
+            })}
+      </div>
+      <button className={`${styles.button} btn btn-accent btn-xs`}>Add Manually</button>
+      <div className="m-2"></div>
+      <button className={`${styles.button} btn btn-primary btn-xs`} onClick={() => onAddAssetsClick()}>
+        Continue
+      </button>
+    </motion.div>
   );
 };
 
-interface IAssetProps{
-  onClick:() => void;
-  isSelected:boolean
+interface IAssetProps {
+  onClick: () => void;
+  isSelected: boolean;
+  tx?: RecoveryTx;
+  isLoading: boolean;
 }
 
-
-const AssetItem = ({onClick, isSelected}:IAssetProps) => {
-  return <motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  onClick={() => onClick()}
-  className={`${isSelected ? "bg-base-200" : ""} ${styles.assetItem}`}
->
-    <div className={`${styles.logoContainer}`}>
-    <Image className={styles.logo} src={LogoSvg} alt="" />
-    </div>
-    <div className={styles.data}>
-      <h3>Name</h3>
-      <span>ID</span>
-    </div>
-  </motion.div>
-}
+const AssetItem = ({ onClick, isSelected, tx, isLoading }: IAssetProps) => {
+  const getSubtitleTitle = () => {
+    if (!tx) {
+      return "";
+    }
+    if (["erc1155", "erc721"].indexOf(tx.type) != -1) {
+      //@ts-ignore
+      return `Token ID: ${tx.tokenId!}`;
+    }
+    if (tx.type === "erc20") {
+      //@ts-ignore
+      return tx.value;
+    }
+    return "";
+  };
+  const getTitle = () => {
+    if (!tx) {
+      return "";
+    }
+    if (tx.type === "erc20") {
+      //@ts-ignore
+      return tx.symbol;
+    }
+    return tx.info;
+  };
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      onClick={() => onClick()}
+      className={`${isSelected ? "bg-base-200" : ""} ${styles.assetItem}  ${isLoading ? styles.loading : ""}`}
+    >
+      <div className={`${styles.logoContainer}`}>
+        <Image className={styles.logo} src={LogoSvg} alt="" />
+      </div>
+      <div className={`${styles.data}`}>
+        <h3>{getTitle()}</h3>
+        <span>{getSubtitleTitle()}</span>
+      </div>
+    </motion.div>
+  );
+};
