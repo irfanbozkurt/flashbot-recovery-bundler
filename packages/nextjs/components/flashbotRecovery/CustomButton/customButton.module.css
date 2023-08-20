@@ -9,3 +9,6 @@
     line-height: normal;
     border: 1px solid;
 }
+.button:hover{
+    border: 1px solid;
+}
