@@ -1,20 +1,20 @@
 import React, { Dispatch, SetStateAction } from "react";
+import { CustomButton } from "../CustomButton/CustomButton";
 import styles from "./transactionBundleStep.module.css";
 import { AnimatePresence, motion } from "framer-motion";
 import { RecoveryTx } from "~~/types/business";
 
 interface IProps {
   isVisible: boolean;
-  clear:() => void;
+  clear: () => void;
   transactions: RecoveryTx[];
-  onAddMore:() => void;
-  modifyTransactions:Dispatch<SetStateAction<RecoveryTx[]>>
+  onAddMore: () => void;
+  modifyTransactions: Dispatch<SetStateAction<RecoveryTx[]>>;
 }
-export const TransactionBundleStep = ({ clear,onAddMore, isVisible, transactions, modifyTransactions }: IProps) => {
+export const TransactionBundleStep = ({ clear, onAddMore, isVisible, transactions, modifyTransactions }: IProps) => {
   if (!isVisible) {
     return <></>;
   }
-
 
   const removeUnsignedTx = (txId: number) => {
     modifyTransactions((prev: RecoveryTx[]) => {
@@ -28,7 +28,6 @@ export const TransactionBundleStep = ({ clear,onAddMore, isVisible, transactions
     });
   };
 
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
       <h2 className={styles.title}>Your transactions</h2>
@@ -37,11 +36,13 @@ export const TransactionBundleStep = ({ clear,onAddMore, isVisible, transactions
           return <TransactionItem key={i} onDelete={() => removeUnsignedTx(i)} tx={item} />;
         })}
       </div>
-      <span className={styles.clear} onClick={() => clear()}>Clear all</span>
+      <span className={styles.clear} onClick={() => clear()}>
+        Clear all
+      </span>
       <div className="m-2"></div>
-      <button className={`${styles.button} btn btn-accent btn-xs`} onClick={() => onAddMore()}>Add</button>
+      <CustomButton type="accent" text={"Add"} onClick={() => onAddMore()} />
       <div className="m-2"></div>
-      <button className={`${styles.button} btn btn-primary`}>Start Signing</button>
+      <CustomButton type="primary" text={"Start Signing"} onClick={() => ({})} />
     </motion.div>
   );
 };
@@ -52,8 +53,6 @@ interface ITransactionProps {
 }
 
 const TransactionItem = ({ onDelete, tx }: ITransactionProps) => {
-
-
   const getTitle = () => {
     if (!tx) {
       return "";
@@ -68,7 +67,7 @@ const TransactionItem = ({ onDelete, tx }: ITransactionProps) => {
     }
     return tx.info;
   };
- 
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -78,7 +77,9 @@ const TransactionItem = ({ onDelete, tx }: ITransactionProps) => {
       <div className={styles.data}>
         <h3>{getTitle()}</h3>
       </div>
-      <div className={`${styles.close}`} onClick={() => onDelete()}>X</div>
+      <div className={`${styles.close}`} onClick={() => onDelete()}>
+        X
+      </div>
     </motion.div>
   );
 };
