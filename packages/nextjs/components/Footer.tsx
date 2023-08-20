@@ -11,7 +11,7 @@ import { getTargetNetwork } from "~~/utils/scaffold-eth";
  */
 export const Footer = () => {
   return (
-    <div className="min-h-0 p-5 mb-11 lg:mb-0">
+    <div className="min-h-0 p-5 lg:mb-0">
       <div className="fixed flex justify-between items-center w-full z-20 p-4 bottom-0 left-0 pointer-events-none">
         <SwitchTheme className="pointer-events-auto" />
       </div>
