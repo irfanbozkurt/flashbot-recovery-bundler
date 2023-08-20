@@ -21,28 +21,30 @@ export const Layout = ({ children, stepActive }: IProps) => {
             <Step
               isActive={stepActive == 1}
               index={1}
-              title={"Title"}
-              description={"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"}
+              title={"Enter the hacked address"}
+              description={"Provide the address that was hacked so we can search for your assets."}
             />
             <Step
               isActive={stepActive == 2}
               index={2}
-              title={"Title"}
-              description={"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"}
+              title={"Select your assets"}
+              description={
+                "Your assets will be listed, select the ones you want to transfer or add manually if you miss someone"
+              }
             />
 
             <Step
               isActive={stepActive == 3}
               index={3}
-              title={"Title"}
-              description={"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"}
+              title={"Confirm the bundle"}
+              description={"Review the transactions that are going to be generated to recover your assets"}
             />
 
             <Step
               isActive={stepActive == 4}
               index={4}
-              title={"Title"}
-              description={"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"}
+              title={"Recover your assets"}
+              description={"Follow the steps to retrieve your assets, this is a critical process, so please be patient. Remember to increase the gas amount for higher chances of success."}
             />
           </div>
         </div>
