@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { CustomButton } from "../CustomButton/CustomButton";
 import styles from "./hackedAddressStep.module.css";
 import { isAddress } from "ethers/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,27 +10,14 @@ interface IProps {
   onSubmit: (address: string) => void;
 }
 export const HackedAddressStep = ({ isVisible, onSubmit }: IProps) => {
-  
-  if(!isVisible){
-    return <></>
+  if (!isVisible) {
+    return <></>;
   }
-  
+
   const [hackedAddress, setHackedAddress] = useState<string>("");
 
   return (
-    <motion.form
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className={styles.container}
-      onSubmit={e => {
-        e.preventDefault();
-        if (!isAddress(hackedAddress)) {
-          alert("Given hacked address is not a valid address");
-          return;
-        }
-        onSubmit(hackedAddress);
-      }}
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
       <label className={styles.label} htmlFor="addressInput">
         Hacked address
       </label>
@@ -39,9 +27,17 @@ export const HackedAddressStep = ({ isVisible, onSubmit }: IProps) => {
         placeholder={"0xcEBD023e3a...F7fa035bbf52e6"}
         onChange={setHackedAddress}
       />
-      <button type="submit" className={`${styles.button} btn btn-primary btn-xs`}>
-        Continue
-      </button>
-    </motion.form>
+      <CustomButton
+        type="primary"
+        text={"Continue"}
+        onClick={() => {
+          if (!isAddress(hackedAddress)) {
+            alert("Given hacked address is not a valid address");
+            return;
+          }
+          onSubmit(hackedAddress);
+        }}
+      />
+    </motion.div>
   );
 };
