@@ -5,6 +5,7 @@ import styles from "./assetSelectionStep.module.css";
 import { motion } from "framer-motion";
 import { useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 import { RecoveryTx } from "~~/types/business";
+import { CustomButton } from "../CustomButton/CustomButton";
 
 interface IProps {
   isVisible: boolean;
@@ -79,11 +80,9 @@ export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAdd
               );
             })}
       </div>
-      <button className={`${styles.button} btn btn-accent btn-xs`}>Add Manually</button>
+      <CustomButton type="accent" text={"Add Manually"} onClick={() => ({})} />
       <div className="m-2"></div>
-      <button className={`${styles.button} btn btn-primary btn-xs`} onClick={() => onAddAssetsClick()}>
-        Continue
-      </button>
+      <CustomButton type="primary" text={"Continue"} onClick={() => onAddAssetsClick()} />
     </motion.div>
   );
 };
