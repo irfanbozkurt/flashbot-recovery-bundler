@@ -17,6 +17,7 @@ interface IProps {
   transactions: RecoveryTx[];
   onAddMore: () => void;
   modifyTransactions: Dispatch<SetStateAction<RecoveryTx[]>>;
+  onSubmit:(val:BigNumber) => void
 }
 const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
   1: 7,
@@ -27,6 +28,7 @@ export const TransactionBundleStep = ({
   clear,
   onAddMore,
   isVisible,
+  onSubmit,
   transactions,
   modifyTransactions,
 }: IProps) => {
@@ -131,7 +133,7 @@ export const TransactionBundleStep = ({
       <div className="m-4"></div>
       <CustomButton type="btn-accent" text={"Assets"} onClick={() => onAddMore()} />
       <div className="m-2"></div>
-      <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => ({})} />
+      <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit(totalGasEstimate)} />
     </motion.div>
   );
 };
