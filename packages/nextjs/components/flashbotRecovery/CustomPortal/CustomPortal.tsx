@@ -10,13 +10,14 @@ interface IProps {
   title: string;
   image?: string;
   video?: string;
+  close?:boolean;
   description: string;
   button?: {
     text: string;
     action: () => void;
   };
 }
-export const CustomPortal = ({ title, image, video, description, button }: IProps) => {
+export const CustomPortal = ({ title, image, video, description, button, close=true}: IProps) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export const CustomPortal = ({ title, image, video, description, button }: IProp
           <div className={`${styles.modal} bg-base-300`}>
             <span className={`${styles.close}`} onClick={() => setMounted(false)}>
               {" "}
-              <Image src={CloseSvg} alt={""} />
+              {close ? <Image src={CloseSvg} alt={""} />: <></>}
             </span>
             <div className={`${styles.modalContent}`}>
               <h3 className={`${styles.title}`}>{title}</h3>
