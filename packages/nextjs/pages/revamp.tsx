@@ -14,7 +14,9 @@ import { CustomHeader } from "~~/components/flashbotRecovery/CustomHeader/Custom
 import { CustomPortal } from "~~/components/flashbotRecovery/CustomPortal/CustomPortal";
 import { HackedAddressStep } from "~~/components/flashbotRecovery/HackedAddressStep/HackedAddressStep";
 import { Layout } from "~~/components/flashbotRecovery/Layout/Layout";
+import { RecoveryProcess } from "~~/components/flashbotRecovery/RecoveryProcess/RecoveryProcess";
 import { TransactionBundleStep } from "~~/components/flashbotRecovery/TransactionBundleStep/transactionBundleStep";
+import { RecoveryProcessStatus, useBundleProcess } from "~~/hooks/flashbotRecoveryBundle/useFlashbotNetworkChange";
 import { RecoveryTx } from "~~/types/business";
 
 const Home: NextPage = () => {
@@ -23,6 +25,9 @@ const Home: NextPage = () => {
   const [hackedAddress, setHackedAddress] = useLocalStorage<string>("hackedAddress", "");
   const [unsignedTxs, setUnsignedTxs] = useLocalStorage<RecoveryTx[]>("unsignedTxs", []);
   const [isOnBasket, setIsOnBasket] = useState(false);
+  const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
+
+  const { data: processStatus, startBundleProcess, signRecoveryTransactions } = useBundleProcess();
 
   useEffect(() => {
     if (!!safeAddress || !address) {
@@ -32,7 +37,15 @@ const Home: NextPage = () => {
     return () => {};
   }, [address]);
 
-  const getActiveStep = () => {
+  useEffect(() => {
+    if(address === hackedAddress && processStatus === RecoveryProcessStatus.switchToHacked && unsignedTxs.length > 0){
+      signRecoveryTransactions(hackedAddress, unsignedTxs, false)
+    }
+  
+    return () => {};
+  }, [address])
+
+  const getLayoutActiveStep = () => {
     if (!!isOnBasket) {
       return 2;
     }
@@ -45,7 +58,7 @@ const Home: NextPage = () => {
     }
     return 1;
   };
-  const activeStep = getActiveStep();
+  const activeStep = getLayoutActiveStep();
 
   return (
     <>
@@ -74,7 +87,7 @@ const Home: NextPage = () => {
                 isVisible={activeStep === 2}
                 onSubmit={txsToAdd => {
                   setUnsignedTxs(txsToAdd);
-                  setIsOnBasket(false)
+                  setIsOnBasket(false);
                 }}
                 hackedAddress={hackedAddress}
                 safeAddress={safeAddress}
@@ -85,10 +98,14 @@ const Home: NextPage = () => {
                 modifyTransactions={setUnsignedTxs}
                 onAddMore={() => setIsOnBasket(true)}
                 clear={() => setUnsignedTxs([])}
+                onSubmit={(totalGas) => {
+                  startBundleProcess({safeAddress, modifyBundleId:val => setCurrentBundleId(val),totalGas, hackedAddress, transactions:unsignedTxs})
+                }}
               />
             </>
           </Layout>
         )}
+        <RecoveryProcess recoveryStatus={processStatus}></RecoveryProcess>
         {/* <CustomPortal
           title={"Clear cache"}
           description={
