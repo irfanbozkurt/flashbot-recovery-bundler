@@ -1,5 +1,5 @@
 .container{
-    width: 100%;
+    width: 99%;
    
     margin-bottom: 0;
     display: flex;
@@ -70,4 +70,10 @@ font-weight: 500;
     justify-content: center;
     margin-left:16px;
     margin-right: 16px;
+}
+.gasContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }

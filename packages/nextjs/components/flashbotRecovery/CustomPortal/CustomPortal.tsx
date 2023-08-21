@@ -47,7 +47,7 @@ export const CustomPortal = ({ title, image, video, description, button }: IProp
               {!!image ? <Image className={`${styles.image}`} src={image} alt={""} /> : <></>}
               {!!video ? <video src={video} /> : <></>}
               <p className={`${styles.text} text-secondary-content`}>{description}</p>
-              {!!button ? <CustomButton type="primary" text={button.text} onClick={() => button.action()} /> : <></>}
+              {!!button ? <CustomButton type="btn-primary" text={button.text} onClick={() => button.action()} /> : <></>}
             </div>
           </div>
         </motion.div>,
