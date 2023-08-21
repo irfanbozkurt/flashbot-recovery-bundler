@@ -31,6 +31,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    
 }
 
 .logoContainer {
@@ -47,8 +48,9 @@
   margin-right: 16px;
 }
 .steps{
-    margin-top: 68px;
+    margin-top: 48px;
     margin-right: 63px;
+    position: relative;
 }
 .step {
   display: flex;
@@ -71,7 +73,7 @@ font-weight: 600;
     margin-left: 16px;
 }
 .stepTitle {
-    font-size: 20px;
+    font-size: 18px;
 font-style: normal;
 font-weight: 600;
 margin: 0;
@@ -90,7 +92,34 @@ margin: 0;
 
 
 
+.addresess{
+  display: flex;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  border-radius: 12px;
+  justify-content: space-around;
+  max-width: 380px;
+  width: 34%;
+  left: 96px;
+  bottom: 26px;
+}
 
+.addressContainer{
+  margin: 24px 0;
+  margin-right: 0;
+}
+.addressContainer svg{
+  display: none;
+
+}
+.addressContainer span{
+  margin-bottom: 10px;
+}
+
+.addressContainer{
+  
+}
 
 
   @media (min-width: 768px) {

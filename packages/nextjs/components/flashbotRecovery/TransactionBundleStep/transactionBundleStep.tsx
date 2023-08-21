@@ -124,11 +124,11 @@ export const TransactionBundleStep = ({
         Clear all
       </span>
       <div className={styles.gasContainer}>
-        <Image height={40} width={40} src={GasSvg} alt="" />
+        <Image height={30} width={30} src={GasSvg} alt="" />
+        <div className="m-1"></div>
         <span className={styles.gasValue}>{ethers.utils.formatEther(totalGasEstimate.toString())}</span>
       </div>
-
-      <div className="m-2"></div>
+      <div className="m-4"></div>
       <CustomButton type="btn-accent" text={"Assets"} onClick={() => onAddMore()} />
       <div className="m-2"></div>
       <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => ({})} />

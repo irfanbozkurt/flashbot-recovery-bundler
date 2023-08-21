@@ -3,12 +3,15 @@ import Image from "next/image";
 import LogoSvg from "../../../public/assets/flashbotRecovery/logo.svg";
 import styles from "./layout.module.css";
 import { motion } from "framer-motion";
+import { Address } from "~~/components/scaffold-eth";
 
 interface IProps {
   children: JSX.Element;
   stepActive: number;
+  safeAddress:string;
+  hackedAddress:string;
 }
-export const Layout = ({ children, stepActive }: IProps) => {
+export const Layout = ({ children, stepActive, hackedAddress, safeAddress}: IProps) => {
   return (
     <motion.div className={styles.layout} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className={styles.sidebar}>
@@ -44,10 +47,23 @@ export const Layout = ({ children, stepActive }: IProps) => {
               isActive={stepActive == 4}
               index={4}
               title={"Recover your assets"}
-              description={"Follow the steps to retrieve your assets, this is a critical process, so please be patient. Remember to increase the gas amount for higher chances of success."}
+              description={"Follow the steps to retrieve your assets, this is a critical process, so please be patient."}
             />
+            
           </div>
         </div>
+        <div className={`${styles.addresess} bg-base-300`}>
+              <div className={`${styles.addressContainer}`}>
+                <span>Safe Address</span>
+                <div className="m-2"></div>
+                <Address address={safeAddress} disableAddressLink={true}></Address>
+              </div>
+              <div className={`${styles.addressContainer}`}>
+              <span>Hacked Address</span>
+              <div className="m-2"></div>
+                <Address address={hackedAddress} disableAddressLink={true}></Address>
+              </div>
+            </div>
       </div>
       <div className={`${styles.content} bg-base-300`}>{children}</div>
     </motion.div>
