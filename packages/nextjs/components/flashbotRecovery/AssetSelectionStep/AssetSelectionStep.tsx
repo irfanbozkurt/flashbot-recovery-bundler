@@ -80,9 +80,9 @@ export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAdd
               );
             })}
       </div>
-      <CustomButton type="accent" text={"Add Manually"} onClick={() => ({})} />
+      <CustomButton type="btn-accent" text={"Add Manually"} onClick={() => ({})} />
       <div className="m-2"></div>
-      <CustomButton type="primary" text={"Continue"} onClick={() => onAddAssetsClick()} />
+      <CustomButton type="btn-primary" text={"Continue"} onClick={() => onAddAssetsClick()} />
     </motion.div>
   );
 };

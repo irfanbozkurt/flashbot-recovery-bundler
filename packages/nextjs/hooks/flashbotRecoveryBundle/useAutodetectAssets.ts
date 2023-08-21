@@ -315,7 +315,6 @@ export const useAutodetectAssets = () => {
       );
       const result: RecoveryTx[] = [...autoDetectedErc20Txs, ...autoDetectedErc721Txs, ...autoDetectedErc1155Txs];
       return result;
-      // TODO FRAN   await estimateTotalGasPrice(unsignedTxsInitializationVector);
     } catch (e) {
       console.error(`Error fetching assets of hacked account: ${e}`);
     }
