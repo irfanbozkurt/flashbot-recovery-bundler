@@ -1,19 +1,32 @@
 import React from "react";
 import { CustomPortal } from "../CustomPortal/CustomPortal";
-import { RecoveryProcessStatus, useBundleProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
+import { RecoveryProcessStatus } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import LogoSvg from "~~/public/assets/flashbotRecovery/logo.svg";
+import ClockSvg from "~~/public/assets/flashbotRecovery/clock.svg";
+import SuccessSvg from "~~/public/assets/flashbotRecovery/success.svg";
 import VideoSvg from "~~/public/assets/flashbotRecovery/video.svg";
 
 interface IProps {
   recoveryStatus: RecoveryProcessStatus;
   startSigning: () => void;
-  resetStatus: () => void;
+  finishProcess: () => void;
   startProcess: () => void;
-  connectedAddress:string;
-  safeAddress:string;
-  hackedAddress:string;
+  connectedAddress: string;
+  safeAddress: string;
+  hackedAddress: string;
+  blockCountdown:number
 }
-export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, connectedAddress,safeAddress, hackedAddress }: IProps) => {
+export const RecoveryProcess = ({
+  recoveryStatus,
+  startSigning,
+  startProcess,
+  finishProcess,
+  blockCountdown,
+  connectedAddress,
+  safeAddress,
+  hackedAddress,
+}: IProps) => {
+
   if (recoveryStatus == RecoveryProcessStatus.initial) {
     return <></>;
   }
@@ -21,9 +34,17 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, co
     alert("you already covered the gas. If you're in a confussy situation, clear cookies and refresh page.");
     return;
   }
-  if (recoveryStatus == RecoveryProcessStatus.noAccountConnected) {
-    //TODO move the user to connect account
-    return;
+
+  if (recoveryStatus == RecoveryProcessStatus.cachedDataToClean) {
+    return (
+      <CustomPortal
+        title={"Clear cache"}
+        description={
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
+        }
+        image={VideoSvg}
+      />
+    );
   }
 
   if (recoveryStatus == RecoveryProcessStatus.noSafeAccountConnected) {
@@ -35,7 +56,7 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, co
         }
         button={{
           text: "Continue",
-          disabled:connectedAddress !== safeAddress,
+          disabled: connectedAddress !== safeAddress,
           action: () => startProcess(),
         }}
         image={LogoSvg}
@@ -43,12 +64,21 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, co
     );
   }
   if (
-    recoveryStatus == RecoveryProcessStatus.switchFlashbotNetworkAndPayBundleGas ||
-    recoveryStatus == RecoveryProcessStatus.gasPaid
+    recoveryStatus == RecoveryProcessStatus.switchFlashbotNetworkAndPayBundleGas
   ) {
     return (
       <CustomPortal
         title={"Switching Network"}
+        description={"Switch to personal Flashbot RPC network to prepare the transacion you will pay"}
+        image={VideoSvg}
+      />
+    );
+  }
+
+  if(recoveryStatus == RecoveryProcessStatus.increaseGas){
+    return (
+      <CustomPortal
+        title={"Increase the gas"}
         description={"Switch to personal Flashbot RPC network to prepare the transacion you will pay"}
         image={VideoSvg}
       />
@@ -63,7 +93,7 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, co
         }
         button={{
           text: "Continue",
-          disabled:connectedAddress !== hackedAddress,
+          disabled: connectedAddress !== hackedAddress,
           action: () => startSigning(),
         }}
         image={LogoSvg}
@@ -72,7 +102,8 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, co
   }
   if (
     recoveryStatus == RecoveryProcessStatus.signEachTransaction ||
-    recoveryStatus == RecoveryProcessStatus.allTxSigned
+    recoveryStatus == RecoveryProcessStatus.allTxSigned ||
+    recoveryStatus == RecoveryProcessStatus.sendingBundle
   ) {
     return (
       <CustomPortal
@@ -84,17 +115,34 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, co
       />
     );
   }
-
-  if (recoveryStatus == RecoveryProcessStatus.cachedDataToClean) {
+  if (recoveryStatus == RecoveryProcessStatus.listeningToBundle) {
     return (
       <CustomPortal
-        title={"Clear cache"}
+        title={"Wait without refreshing the page"}
         description={
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio matt"
         }
-        image={VideoSvg}
+        image={ClockSvg}
+        indicator={blockCountdown}
+      />
+    );  
+  }
+  if (recoveryStatus == RecoveryProcessStatus.success) {
+    return (
+      <CustomPortal
+        title={"Your assets have been recovered!"}
+        description={
+          "If we have helped you please, share the tool and if you want let us a tip to continue contributing"
+        }
+        button={{
+          text: "Continue",
+          disabled: connectedAddress !== hackedAddress,
+          action: () => finishProcess(),
+        }}
+        image={SuccessSvg}
       />
     );
   }
+
   return <></>;
 };

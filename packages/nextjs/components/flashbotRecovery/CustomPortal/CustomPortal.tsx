@@ -17,8 +17,9 @@ interface IProps {
     disabled:boolean;
     action: () => void;
   };
+  indicator?:number
 }
-export const CustomPortal = ({ title, image, video, description, button, close}: IProps) => {
+export const CustomPortal = ({ indicator, title, image, video, description, button, close}: IProps) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -46,11 +47,16 @@ export const CustomPortal = ({ title, image, video, description, button, close}:
             </span>
             <div className={`${styles.modalContent}`}>
               <h3 className={`${styles.title}`}>{title}</h3>
+              <div>
               {!!image ? <Image className={`${styles.image}`} src={image} alt={""} /> : <></>}
-              {!!video ? <video src={video} /> : <></>}
+              {!!indicator ? <div className={styles.indicator}>{indicator} BLOCKS</div> : <></>}
+              </div>
+             
+              {!!video ?<Image className={`${styles.image}`} src={video} alt={""} /> : <></>}
               <p className={`${styles.text} text-secondary-content`}>{description}</p>
               {!!button ? <CustomButton type="btn-primary" disabled={button.disabled} text={button.text} onClick={() => button.action()} /> : <></>}
             </div>
+      
           </div>
         </motion.div>,
         portalSelector,

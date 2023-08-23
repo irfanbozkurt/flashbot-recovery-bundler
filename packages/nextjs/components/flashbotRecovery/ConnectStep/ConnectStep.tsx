@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import IllustrationSvg from "../../../public/assets/flashbotRecovery/logo.svg"
 import styles from "./connectStep.module.css"
@@ -6,9 +6,22 @@ import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { AnimatePresence, motion } from "framer-motion";
 interface IProps{
   isVisible:boolean
+  safeAddress:string;
+  address:string;
+  setSafeAddress: (newAdd:string) => void
 }
-export const ConnectStep = ({isVisible}:IProps) => {
+export const ConnectStep = ({isVisible, safeAddress, address, setSafeAddress}:IProps) => {
+  
 
+  useEffect(() => {
+    if (!!safeAddress || !address) {
+      return;
+    }
+    setSafeAddress(address);
+    return () => {};
+  }, [address]);
+
+  
   return <AnimatePresence>
   {isVisible && (
     <motion.div
@@ -20,8 +33,7 @@ export const ConnectStep = ({isVisible}:IProps) => {
       <h1 className={styles.title}>Welcome to Flashbot Recovery</h1>
       <Image className={styles.illustration} src={IllustrationSvg} alt="" />
       <p className={`${styles.text} text-secondary-content`}>
-        Lorem ipsum dolor sit amet, consectetur dipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet
-        odio mattis.
+        Connect your "Safe Wallet" where the assets will be send after the recovery process.
       </p>
       <div className={styles.buttonContainer}>
         <RainbowKitCustomConnectButton/>
