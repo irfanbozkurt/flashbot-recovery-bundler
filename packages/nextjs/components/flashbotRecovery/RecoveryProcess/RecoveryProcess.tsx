@@ -1,6 +1,6 @@
 import React from "react";
 import { CustomPortal } from "../CustomPortal/CustomPortal";
-import { RecoveryProcessStatus, useBundleProcess } from "~~/hooks/flashbotRecoveryBundle/useFlashbotNetworkChange";
+import { RecoveryProcessStatus, useBundleProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import LogoSvg from "~~/public/assets/flashbotRecovery/logo.svg";
 import VideoSvg from "~~/public/assets/flashbotRecovery/video.svg";
 

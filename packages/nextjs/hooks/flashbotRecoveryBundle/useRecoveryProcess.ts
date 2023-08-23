@@ -31,7 +31,7 @@ export enum RecoveryProcessStatus {
   success,
 }
 
-export const useBundleProcess = () => {
+export const useRecoveryProcess = () => {
   const targetNetwork = getTargetNetwork();
   const [gasCovered, setGasCovered] = useState<boolean>(false);
   const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.initial);
@@ -109,7 +109,7 @@ export const useBundleProcess = () => {
 
 
 
-  const startBundleProcess = async ({safeAddress,modifyBundleId,totalGas, hackedAddress, transactions }:IStartProcessPops) => {
+  const startRecoveryProcess = async ({safeAddress,modifyBundleId,totalGas, hackedAddress, transactions }:IStartProcessPops) => {
     const isValid = validateBundleIsReady(safeAddress);
     if (!isValid) {
       return;
@@ -163,7 +163,7 @@ export const useBundleProcess = () => {
 
   return {
     data:stepActive,
-    startBundleProcess,
+    startRecoveryProcess,
     signRecoveryTransactions,
     resetStatus
   }
