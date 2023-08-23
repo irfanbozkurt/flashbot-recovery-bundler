@@ -27,6 +27,7 @@ export enum RecoveryProcessStatus {
   switchToHacked,
   allTxSigned,
   signEachTransaction,
+  cachedDataToClean,
   success,
 }
 
@@ -39,6 +40,9 @@ export const useBundleProcess = () => {
   
   const { data: walletClient } = useWalletClient();
 
+  const resetStatus = () => {
+    setStepActive(RecoveryProcessStatus.initial);
+  }
   const validateBundleIsReady = (safeAddress: string) => {
     if (gasCovered) {
       setStepActive(RecoveryProcessStatus.gasCovered);
@@ -78,6 +82,7 @@ export const useBundleProcess = () => {
 
     if (!surpass && !gasCovered) {
       alert("How did you come here without covering the gas fee first??");
+      resetStatus()
       return;
     }
 
@@ -96,8 +101,8 @@ export const useBundleProcess = () => {
       setStepActive(RecoveryProcessStatus.allTxSigned);
       // sendBundle();
     } catch (e) {
-      console.error(`FAILED TO SIGN TXS`);
-      console.error(e);
+      alert(`FAILED TO SIGN TXS Error: ${e}`);
+      resetStatus()
     }
   };
 
@@ -121,6 +126,7 @@ export const useBundleProcess = () => {
       signRecoveryTransactions(hackedAddress, transactions, true);
       return;
     } catch (e) {
+      resetStatus()
       alert(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
     }
   };
@@ -158,6 +164,7 @@ export const useBundleProcess = () => {
   return {
     data:stepActive,
     startBundleProcess,
-    signRecoveryTransactions
+    signRecoveryTransactions,
+    resetStatus
   }
 };

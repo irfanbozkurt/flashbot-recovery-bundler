@@ -6,9 +6,14 @@ import VideoSvg from "~~/public/assets/flashbotRecovery/video.svg";
 
 interface IProps {
   recoveryStatus: RecoveryProcessStatus;
-  startSigning:() => void
+  startSigning: () => void;
+  resetStatus: () => void;
+  startProcess: () => void;
+  connectedAddress:string;
+  safeAddress:string;
+  hackedAddress:string;
 }
-export const RecoveryProcess = ({ recoveryStatus, startSigning }: IProps) => {
+export const RecoveryProcess = ({ recoveryStatus, startSigning, startProcess, connectedAddress,safeAddress, hackedAddress }: IProps) => {
   if (recoveryStatus == RecoveryProcessStatus.initial) {
     return <></>;
   }
@@ -24,11 +29,16 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning }: IProps) => {
   if (recoveryStatus == RecoveryProcessStatus.noSafeAccountConnected) {
     return (
       <CustomPortal
-        title={"Clear cache"}
+        title={"Switch to safe address"}
         description={
           "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
         }
-        image={VideoSvg}
+        button={{
+          text: "Continue",
+          disabled:connectedAddress !== safeAddress,
+          action: () => startProcess(),
+        }}
+        image={LogoSvg}
       />
     );
   }
@@ -38,10 +48,9 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning }: IProps) => {
   ) {
     return (
       <CustomPortal
-        title={"Switching Netork"}
+        title={"Switching Network"}
         description={"Switch to personal Flashbot RPC network to prepare the transacion you will pay"}
         image={VideoSvg}
-        close={false}
       />
     );
   }
@@ -49,27 +58,41 @@ export const RecoveryProcess = ({ recoveryStatus, startSigning }: IProps) => {
     return (
       <CustomPortal
         title={"Switch to hacked address"}
-        close={false}
         description={
           "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
         }
         button={{
-          text:"Continue",
-          action:() => startSigning()
+          text: "Continue",
+          disabled:connectedAddress !== hackedAddress,
+          action: () => startSigning(),
         }}
         image={LogoSvg}
       />
     );
   }
-  if (recoveryStatus == RecoveryProcessStatus.signEachTransaction || recoveryStatus == RecoveryProcessStatus.allTxSigned) {
+  if (
+    recoveryStatus == RecoveryProcessStatus.signEachTransaction ||
+    recoveryStatus == RecoveryProcessStatus.allTxSigned
+  ) {
     return (
       <CustomPortal
         title={"Sign each transaction"}
-        close={false}
         description={
           "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
         }
         image={LogoSvg}
+      />
+    );
+  }
+
+  if (recoveryStatus == RecoveryProcessStatus.cachedDataToClean) {
+    return (
+      <CustomPortal
+        title={"Clear cache"}
+        description={
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
+        }
+        image={VideoSvg}
       />
     );
   }

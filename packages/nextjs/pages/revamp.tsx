@@ -3,6 +3,7 @@ import { SetStateAction, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import LogoSvg from "../public/assets/flashbotRecovery/logo.svg";
 import VideoSvg from "../public/assets/flashbotRecovery/video.svg";
+import { BigNumber } from "ethers";
 import { isAddress } from "ethers/lib/utils";
 import { NextPage } from "next";
 import { useLocalStorage } from "usehooks-ts";
@@ -24,10 +25,12 @@ const Home: NextPage = () => {
   const [safeAddress, setSafeAddress] = useLocalStorage<string>("toAddress", "");
   const [hackedAddress, setHackedAddress] = useLocalStorage<string>("hackedAddress", "");
   const [unsignedTxs, setUnsignedTxs] = useLocalStorage<RecoveryTx[]>("unsignedTxs", []);
+  const [totalGasEstimate, setTotalGasEstimate] = useState<BigNumber>(BigNumber.from("0"));
+
   const [isOnBasket, setIsOnBasket] = useState(false);
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
 
-  const { data: processStatus, startBundleProcess, signRecoveryTransactions } = useBundleProcess();
+  const { data: processStatus, startBundleProcess, signRecoveryTransactions, resetStatus } = useBundleProcess();
 
   useEffect(() => {
     if (!!safeAddress || !address) {
@@ -37,7 +40,16 @@ const Home: NextPage = () => {
     return () => {};
   }, [address]);
 
-  
+
+  const startRecovery = () => {
+    startBundleProcess({
+      safeAddress,
+      modifyBundleId: val => setCurrentBundleId(val),
+      totalGas:totalGasEstimate,
+      hackedAddress,
+      transactions: unsignedTxs,
+    });
+  }
   const getLayoutActiveStep = () => {
     if (!!isOnBasket) {
       return 2;
@@ -86,25 +98,27 @@ const Home: NextPage = () => {
                 safeAddress={safeAddress}
               />
               <TransactionBundleStep
+                setTotalGasEstimate={setTotalGasEstimate}
+                totalGasEstimate={totalGasEstimate}
                 isVisible={activeStep === 3}
                 transactions={unsignedTxs}
                 modifyTransactions={setUnsignedTxs}
                 onAddMore={() => setIsOnBasket(true)}
                 clear={() => setUnsignedTxs([])}
-                onSubmit={totalGas => {
-                  startBundleProcess({
-                    safeAddress,
-                    modifyBundleId: val => setCurrentBundleId(val),
-                    totalGas,
-                    hackedAddress,
-                    transactions: unsignedTxs,
-                  });
-                }}
+                onSubmit={() => startRecovery()}
               />
             </>
           </Layout>
         )}
-        <RecoveryProcess recoveryStatus={processStatus} startSigning={() => signRecoveryTransactions(hackedAddress, unsignedTxs, false)}></RecoveryProcess>
+        <RecoveryProcess
+          recoveryStatus={processStatus}
+          resetStatus={() => resetStatus()}
+          startSigning={() => signRecoveryTransactions(hackedAddress, unsignedTxs, false)}
+          startProcess={() => startRecovery()}
+          connectedAddress={address ?? ""}
+          safeAddress={safeAddress}
+          hackedAddress={hackedAddress}
+        ></RecoveryProcess>
         {/* <CustomPortal
           title={"Clear cache"}
           description={

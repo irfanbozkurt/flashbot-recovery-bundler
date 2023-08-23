@@ -18,12 +18,10 @@ interface IProps {
   transactions: RecoveryTx[];
   onAddMore: () => void;
   modifyTransactions: Dispatch<SetStateAction<RecoveryTx[]>>;
-  onSubmit:(val:BigNumber) => void
+  onSubmit:(val:BigNumber) => void;
+  totalGasEstimate:BigNumber;
+  setTotalGasEstimate:Dispatch<SetStateAction<BigNumber>>;
 }
-const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
-  1: 7,
-  5: 10,
-};
 
 export const TransactionBundleStep = ({
   clear,
@@ -32,12 +30,12 @@ export const TransactionBundleStep = ({
   onSubmit,
   transactions,
   modifyTransactions,
+  totalGasEstimate,
+  setTotalGasEstimate
 }: IProps) => {
   if (!isVisible) {
     return <></>;
   }
-  const targetNetwork = getTargetNetwork();
-  const [totalGasEstimate, setTotalGasEstimate] = useState<BigNumber>(BigNumber.from("0"));
   const {estimateTotalGasPrice} = useGasEstimation()
 
   useEffect(() => {

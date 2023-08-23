@@ -10,14 +10,15 @@ interface IProps {
   title: string;
   image?: string;
   video?: string;
-  close?:boolean;
+  close?:() => void;
   description: string;
   button?: {
     text: string;
+    disabled:boolean;
     action: () => void;
   };
 }
-export const CustomPortal = ({ title, image, video, description, button, close=true}: IProps) => {
+export const CustomPortal = ({ title, image, video, description, button, close}: IProps) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -41,14 +42,14 @@ export const CustomPortal = ({ title, image, video, description, button, close=t
           <div className={`${styles.modal} bg-base-300`}>
             <span className={`${styles.close}`} onClick={() => setMounted(false)}>
               {" "}
-              {close ? <Image src={CloseSvg} alt={""} />: <></>}
+              {!!close ? <Image src={CloseSvg} alt={""} onClick={() => close()}/>: <></>}
             </span>
             <div className={`${styles.modalContent}`}>
               <h3 className={`${styles.title}`}>{title}</h3>
               {!!image ? <Image className={`${styles.image}`} src={image} alt={""} /> : <></>}
               {!!video ? <video src={video} /> : <></>}
               <p className={`${styles.text} text-secondary-content`}>{description}</p>
-              {!!button ? <CustomButton type="btn-primary" text={button.text} onClick={() => button.action()} /> : <></>}
+              {!!button ? <CustomButton type="btn-primary" disabled={button.disabled} text={button.text} onClick={() => button.action()} /> : <></>}
             </div>
           </div>
         </motion.div>,
