@@ -5,6 +5,7 @@ import { v4 } from "uuid";
 import { useAccount, useWalletClient } from "wagmi";
 import { RecoveryTx } from "~~/types/business";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useGasEstimation } from "./useGasEstimation";
 
 interface IStartProcessPops {
   safeAddress:string,
@@ -33,7 +34,7 @@ export const useBundleProcess = () => {
   const targetNetwork = getTargetNetwork();
   const [gasCovered, setGasCovered] = useState<boolean>(false);
   const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.initial);
-
+  const {estimateTotalGasPrice} = useGasEstimation()
   const { address } = useAccount();
   
   const { data: walletClient } = useWalletClient();
@@ -112,8 +113,10 @@ export const useBundleProcess = () => {
       ////////// Create new bundle uuid & add corresponding RPC 'subnetwork' to Metamask
       const bundleId = await changeFlashbotNetwork();
       modifyBundleId(bundleId);
+      //ODO review how to set the removed
+      const total = await estimateTotalGasPrice(transactions, () => ({}))
       // ////////// Cover the envisioned total gas fee from safe account
-      await payTheGas(totalGas, hackedAddress)
+      await payTheGas(total, hackedAddress)
       setStepActive(RecoveryProcessStatus.gasPaid);
       signRecoveryTransactions(hackedAddress, transactions, true);
       return;
