@@ -6,8 +6,9 @@ import VideoSvg from "~~/public/assets/flashbotRecovery/video.svg";
 
 interface IProps {
   recoveryStatus: RecoveryProcessStatus;
+  startSigning:() => void
 }
-export const RecoveryProcess = ({ recoveryStatus }: IProps) => {
+export const RecoveryProcess = ({ recoveryStatus, startSigning }: IProps) => {
   if (recoveryStatus == RecoveryProcessStatus.initial) {
     return <></>;
   }
@@ -47,11 +48,15 @@ export const RecoveryProcess = ({ recoveryStatus }: IProps) => {
   if (recoveryStatus == RecoveryProcessStatus.switchToHacked) {
     return (
       <CustomPortal
-        title={"Switch to hacked adress"}
+        title={"Switch to hacked address"}
         close={false}
         description={
           "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
         }
+        button={{
+          text:"Continue",
+          action:() => startSigning()
+        }}
         image={LogoSvg}
       />
     );

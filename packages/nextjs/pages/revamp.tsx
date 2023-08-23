@@ -37,14 +37,7 @@ const Home: NextPage = () => {
     return () => {};
   }, [address]);
 
-  useEffect(() => {
-    if(address === hackedAddress && processStatus === RecoveryProcessStatus.switchToHacked && unsignedTxs.length > 0){
-      signRecoveryTransactions(hackedAddress, unsignedTxs, false)
-    }
   
-    return () => {};
-  }, [address])
-
   const getLayoutActiveStep = () => {
     if (!!isOnBasket) {
       return 2;
@@ -98,14 +91,20 @@ const Home: NextPage = () => {
                 modifyTransactions={setUnsignedTxs}
                 onAddMore={() => setIsOnBasket(true)}
                 clear={() => setUnsignedTxs([])}
-                onSubmit={(totalGas) => {
-                  startBundleProcess({safeAddress, modifyBundleId:val => setCurrentBundleId(val),totalGas, hackedAddress, transactions:unsignedTxs})
+                onSubmit={totalGas => {
+                  startBundleProcess({
+                    safeAddress,
+                    modifyBundleId: val => setCurrentBundleId(val),
+                    totalGas,
+                    hackedAddress,
+                    transactions: unsignedTxs,
+                  });
                 }}
               />
             </>
           </Layout>
         )}
-        <RecoveryProcess recoveryStatus={processStatus}></RecoveryProcess>
+        <RecoveryProcess recoveryStatus={processStatus} startSigning={() => signRecoveryTransactions(hackedAddress, unsignedTxs, false)}></RecoveryProcess>
         {/* <CustomPortal
           title={"Clear cache"}
           description={
