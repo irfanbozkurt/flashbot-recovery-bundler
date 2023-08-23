@@ -17,7 +17,7 @@ import { HackedAddressStep } from "~~/components/flashbotRecovery/HackedAddressS
 import { Layout } from "~~/components/flashbotRecovery/Layout/Layout";
 import { RecoveryProcess } from "~~/components/flashbotRecovery/RecoveryProcess/RecoveryProcess";
 import { TransactionBundleStep } from "~~/components/flashbotRecovery/TransactionBundleStep/transactionBundleStep";
-import { RecoveryProcessStatus, useBundleProcess } from "~~/hooks/flashbotRecoveryBundle/useFlashbotNetworkChange";
+import { RecoveryProcessStatus, useRecoveryProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import { RecoveryTx } from "~~/types/business";
 
 const Home: NextPage = () => {
@@ -30,7 +30,7 @@ const Home: NextPage = () => {
   const [isOnBasket, setIsOnBasket] = useState(false);
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
 
-  const { data: processStatus, startBundleProcess, signRecoveryTransactions, resetStatus } = useBundleProcess();
+  const { data: processStatus, startRecoveryProcess, signRecoveryTransactions, resetStatus } = useRecoveryProcess();
 
   useEffect(() => {
     if (!!safeAddress || !address) {
@@ -42,7 +42,7 @@ const Home: NextPage = () => {
 
 
   const startRecovery = () => {
-    startBundleProcess({
+    startRecoveryProcess({
       safeAddress,
       modifyBundleId: val => setCurrentBundleId(val),
       totalGas:totalGasEstimate,
