@@ -1,14 +1,11 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import Image from "next/image";
 import GasSvg from "../../../public/assets/flashbotRecovery/gas.svg";
 import { CustomButton } from "../CustomButton/CustomButton";
 import styles from "./transactionBundleStep.module.css";
-import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { BigNumber, ethers } from "ethers";
 import { motion } from "framer-motion";
 import { RecoveryTx } from "~~/types/business";
-import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { usePublicClient } from "wagmi";
 import { useInterval } from "usehooks-ts";
 import { useGasEstimation } from "~~/hooks/flashbotRecoveryBundle/useGasEstimation";
 
@@ -33,11 +30,9 @@ export const TransactionBundleStep = ({
   totalGasEstimate,
   setTotalGasEstimate
 }: IProps) => {
-  if (!isVisible) {
-    return <></>;
-  }
-  const {estimateTotalGasPrice} = useGasEstimation()
 
+  const {estimateTotalGasPrice} = useGasEstimation()
+ 
   useEffect(() => {
     if(transactions.length == 0){
       return
@@ -50,6 +45,9 @@ export const TransactionBundleStep = ({
   };
 
   useInterval(() => {
+    if(transactions.length == 0){
+      return
+    }
     updateTotalGasEstimate();
   }, 5000);
 
@@ -65,6 +63,9 @@ export const TransactionBundleStep = ({
     });
   };
 
+  if (!isVisible) {
+    return <></>;
+  }
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
       <h2 className={styles.title}>Your transactions</h2>
@@ -83,7 +84,7 @@ export const TransactionBundleStep = ({
         <span className={styles.gasValue}>{ethers.utils.formatEther(totalGasEstimate.toString())}</span>
       </div>
       <div className="m-4"></div>
-      <CustomButton type="btn-accent" text={"Assets"} onClick={() => onAddMore()} />
+      <CustomButton type="btn-accent" text={"Back to Assets"} onClick={() => onAddMore()} />
       <div className="m-2"></div>
       <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit(totalGasEstimate)} />
     </motion.div>
