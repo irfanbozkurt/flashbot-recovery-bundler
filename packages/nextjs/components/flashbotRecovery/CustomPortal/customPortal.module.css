@@ -50,8 +50,15 @@ margin:0;
 }
 
 .image{
-    height: 250px;
-    width: 467px;
+    height: 190px;
+    width: 190px;
+}
+.indicator{
+text-align: center;
+font-size: 20px;
+font-style: normal;
+font-weight: 600;
+line-height: 100%; /* 20.033px */
 }
 
 .text{

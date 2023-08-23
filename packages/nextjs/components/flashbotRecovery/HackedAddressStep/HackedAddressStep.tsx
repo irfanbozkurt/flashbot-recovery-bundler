@@ -27,8 +27,9 @@ export const HackedAddressStep = ({ isVisible, onSubmit }: IProps) => {
         placeholder={"0xcEBD023e3a...F7fa035bbf52e6"}
         onChange={setHackedAddress}
       />
+      <div className="m2"></div>
       <CustomButton
-        type="primary"
+        type="btn-primary"
         text={"Continue"}
         onClick={() => {
           if (!isAddress(hackedAddress)) {
