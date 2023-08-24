@@ -58,6 +58,7 @@ export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAdd
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
       <ManualAssetSelection
+        safeAddress={safeAddress}
         hackedAddress={hackedAddress}
         isVisible={isAddingManually}
         close={() => setIsAddingManually(false)}
