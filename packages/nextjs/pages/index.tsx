@@ -26,8 +26,8 @@ const Home: NextPage = () => {
   const [hackedAddress, setHackedAddress] = useLocalStorage<string>("hackedAddress", "");
   const [unsignedTxs, setUnsignedTxs] = useLocalStorage<RecoveryTx[]>("unsignedTxs", []);
   const [totalGasEstimate, setTotalGasEstimate] = useState<BigNumber>(BigNumber.from("0"));
-
   const [isOnBasket, setIsOnBasket] = useState(false);
+  
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
 
   const { data: processStatus, startRecoveryProcess, signRecoveryTransactions, blockCountdown } = useRecoveryProcess();
@@ -46,13 +46,16 @@ const Home: NextPage = () => {
     if (!!isOnBasket) {
       return 2;
     }
-
+    if(processStatus !== RecoveryProcessStatus.initial){
+      return 4;
+    }
     if (unsignedTxs.length > 0) {
       return 3;
     }
     if (hackedAddress !== "") {
       return 2;
     }
+   
     return 1;
   };
   const activeStep = getLayoutActiveStep();
