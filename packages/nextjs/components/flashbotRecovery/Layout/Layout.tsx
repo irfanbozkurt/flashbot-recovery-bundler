@@ -8,10 +8,10 @@ import { Address } from "~~/components/scaffold-eth";
 interface IProps {
   children: JSX.Element;
   stepActive: number;
-  safeAddress:string;
-  hackedAddress:string;
+  safeAddress: string;
+  hackedAddress: string;
 }
-export const Layout = ({ children, stepActive, hackedAddress, safeAddress}: IProps) => {
+export const Layout = ({ children, stepActive, hackedAddress, safeAddress }: IProps) => {
   return (
     <motion.div className={styles.layout} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className={styles.sidebar}>
@@ -23,12 +23,14 @@ export const Layout = ({ children, stepActive, hackedAddress, safeAddress}: IPro
           <div className={styles.steps}>
             <Step
               isActive={stepActive == 1}
+              isCompleted={stepActive > 1}
               index={1}
               title={"Enter the hacked address"}
               description={"Provide the address that was hacked so we can search for your assets."}
             />
             <Step
               isActive={stepActive == 2}
+              isCompleted={stepActive > 2}
               index={2}
               title={"Select your assets"}
               description={
@@ -38,6 +40,7 @@ export const Layout = ({ children, stepActive, hackedAddress, safeAddress}: IPro
 
             <Step
               isActive={stepActive == 3}
+              isCompleted={stepActive > 3}
               index={3}
               title={"Confirm the bundle"}
               description={"Review the transactions that are going to be generated to recover your assets"}
@@ -45,25 +48,27 @@ export const Layout = ({ children, stepActive, hackedAddress, safeAddress}: IPro
 
             <Step
               isActive={stepActive == 4}
+              isCompleted={stepActive > 4}
               index={4}
               title={"Recover your assets"}
-              description={"Follow the steps to retrieve your assets, this is a critical process, so please be patient."}
+              description={
+                "Follow the steps to retrieve your assets, this is a critical process, so please be patient."
+              }
             />
-            
           </div>
         </div>
         <div className={`${styles.addresess} bg-base-300`}>
-              <div className={`${styles.addressContainer}`}>
-                <span>Safe Address</span>
-                <div className="m-2"></div>
-                <Address address={safeAddress} disableAddressLink={true}></Address>
-              </div>
-              <div className={`${styles.addressContainer}`}>
-              <span>Hacked Address</span>
-              <div className="m-2"></div>
-                <Address address={hackedAddress} disableAddressLink={true}></Address>
-              </div>
-            </div>
+          <div className={`${styles.addressContainer}`}>
+            <span>Safe Address</span>
+            <div className="m-2"></div>
+            <Address address={safeAddress} disableAddressLink={true}></Address>
+          </div>
+          <div className={`${styles.addressContainer}`}>
+            <span>Hacked Address</span>
+            <div className="m-2"></div>
+            <Address address={hackedAddress} disableAddressLink={true}></Address>
+          </div>
+        </div>
       </div>
       <div className={`${styles.content} bg-base-300`}>{children}</div>
     </motion.div>
@@ -74,11 +79,12 @@ interface IStepProps {
   isActive: boolean;
   index: number;
   title: string;
+  isCompleted:boolean;
   description: string;
 }
-const Step = ({ isActive, index, title, description }: IStepProps) => {
+const Step = ({ isActive, isCompleted, index, title, description }: IStepProps) => {
   return (
-    <div className={`${styles.step} ${isActive ? "" : "text-secondary-content"}`}>
+    <div className={`${styles.step} ${isCompleted ? styles.completed : ""} ${isActive ? "" : "text-secondary-content"}`}>
       <div>
         <span className={`${styles.badge} ${isActive ? "btn-primary" : ""}`}>{index}</span>
       </div>
