@@ -107,7 +107,7 @@ export const CustomContractWriteForm = ({
               }
             }}
           >
-            🧺 add 🧺
+            add
           </button>
         </div>
       </div>

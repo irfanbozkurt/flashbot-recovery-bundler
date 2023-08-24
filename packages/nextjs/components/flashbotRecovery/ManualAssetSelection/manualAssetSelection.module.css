@@ -1,0 +1,144 @@
+.modalContainer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(20, 28, 41, 0.40);
+}
+
+.modal {
+  display: inline-flex;
+  width: 579px;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.03);
+
+}
+
+.modalContent{
+    display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  flex-shrink: 0;
+  margin-bottom: 56px;
+  width: 90%;
+}
+
+.close{
+    align-self: flex-end;
+    margin-top: 14px;
+    margin-right: 14px;
+    cursor: pointer;
+    padding: 10px;
+    padding-bottom: 4px;
+}
+
+.title{
+    font-size: 24px;
+font-style: normal;
+font-weight: 700;
+line-height: 32px;
+margin:0;
+}
+
+
+.text{
+    font-size: 18px;
+font-style: normal;
+font-weight: 400;
+line-height: 32px;
+width: 80%;
+text-align: center;
+margin: 0;
+}
+
+.basicItem{
+  display: flex;
+padding: 16px;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+gap: 24px;
+border-radius: 12px;
+margin-top: 24px;
+}
+
+
+.container, .containerCustom{
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin: 0 auto;
+  max-width: 450px;
+}
+.containerCustom{
+  height: 392px;
+  padding: 0 10px;
+  overflow-y: auto;
+}
+.list{
+  width: 450px;
+  margin: 0 auto;
+}
+.label{
+  font-size: 16px;
+font-style: normal;
+font-weight: 600;
+line-height: normal;
+margin-bottom: 12px;
+}
+.container > div{
+  border-radius: 4px;
+  padding: 4px;
+}
+.containerCustom > div{
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.contract{
+  margin-top: 20px;
+}
+
+.contract > div >div div{
+  border-radius: 4px;
+  padding: 4px;
+}
+.contract > div >div div input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: rgb(156 163 175 / var(--tw-text-opacity));
+  opacity: 1; /* Firefox */
+}
+.contract > div >div div:last-child{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+ }
+ .contract > div >div div:last-child button{
+  background-color: #17A9E8;
+
+  color: #293853;
+  width: 230px;
+  margin: 0 auto;
+  padding: 0px 48px;
+  height: 40px;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  border: 1px solid;
+ }
+
+
+ .contract > div >div div:last-child button svg{
+  display: none;
+ }

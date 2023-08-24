@@ -1,0 +1,41 @@
+.tabsContainer {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 940px;
+  
+}
+.tabsHeader {
+  display: flex;
+  flex-direction: row;
+  display: flex;
+  width: 100%;    
+  max-width: 455px;
+  min-width: 330px;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 8px;
+}
+.tabTitle {
+  line-height: 16px;
+  padding: 7px 0;
+  gap: 10px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.tabContent {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .tabContent {
+    width: 96%;
+    min-width: 330px;
+  }
+}
