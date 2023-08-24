@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import LogoSvg from "../../../public/assets/flashbotRecovery/logo.svg";
+import { CustomButton } from "../CustomButton/CustomButton";
+import { ManualAssetSelection } from "../ManualAssetSelection/ManualAssetSelection";
 import styles from "./assetSelectionStep.module.css";
 import { motion } from "framer-motion";
 import { useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 import { RecoveryTx } from "~~/types/business";
-import { CustomButton } from "../CustomButton/CustomButton";
 
 interface IProps {
   isVisible: boolean;
@@ -14,7 +15,7 @@ interface IProps {
   onSubmit: (txs: RecoveryTx[]) => void;
 }
 export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAddress }: IProps) => {
-
+  const [isAddingManually, setIsAddingManually] = useState(false);
   const { getAutodetectedAssets } = useAutodetectAssets();
   const [selectedAssets, setSelectedAssets] = useState<number[]>([]);
   const [accountAssets, setAccountAssets] = useState<RecoveryTx[]>([]);
@@ -56,6 +57,15 @@ export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAdd
   }
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
+      <ManualAssetSelection
+        hackedAddress={hackedAddress}
+        isVisible={isAddingManually}
+        close={() => setIsAddingManually(false)}
+        addAsset={item => {
+          setAccountAssets(current => [...current, item])
+          setIsAddingManually(false)
+        }}
+      />
       <h2 className={styles.title}>Your assets</h2>
 
       <div className={styles.assetList}>
@@ -80,7 +90,7 @@ export const AssetSelectionStep = ({ isVisible, onSubmit, hackedAddress, safeAdd
               );
             })}
       </div>
-      <CustomButton type="btn-accent" text={"Add Manually"} onClick={() => ({})} />
+      <CustomButton type="btn-accent" text={"Add Manually"} onClick={() => setIsAddingManually(true)} />
       <div className="m-2"></div>
       <CustomButton type="btn-primary" text={"Continue"} onClick={() => onAddAssetsClick()} />
     </motion.div>
@@ -107,6 +117,10 @@ const AssetItem = ({ onClick, isSelected, tx, isLoading }: IAssetProps) => {
       //@ts-ignore
       return tx.value;
     }
+    if (tx.type === "custom") {
+      //@ts-ignore
+      return tx.info.split(" to ")[1]
+    }
     return "";
   };
   const getTitle = () => {
@@ -116,6 +130,10 @@ const AssetItem = ({ onClick, isSelected, tx, isLoading }: IAssetProps) => {
     if (tx.type === "erc20") {
       //@ts-ignore
       return tx.symbol;
+    }
+    if (tx.type === "custom") {
+      //@ts-ignore
+      return tx.info.split(" to ")[0]
     }
     return tx.info;
   };
