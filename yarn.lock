@@ -3697,6 +3697,7 @@ __metadata:
     framer-motion: ^10.16.0
     next: ^13.1.6
     nextjs-progressbar: ^0.0.16
+    node-gyp: ^9.4.0
     postcss: ^8.4.16
     prettier: ^2.8.4
     react: ^18.2.0
@@ -14154,7 +14155,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:latest":
+"node-gyp@npm:^9.4.0, node-gyp@npm:latest":
   version: 9.4.0
   resolution: "node-gyp@npm:9.4.0"
   dependencies:
