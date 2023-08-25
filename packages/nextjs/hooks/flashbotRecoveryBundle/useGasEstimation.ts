@@ -1,4 +1,3 @@
-import React from "react";
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { BigNumber, ethers } from "ethers";
 import { usePublicClient } from "wagmi";
@@ -57,6 +56,6 @@ export const useGasEstimation = () => {
   };
 
   return {
-    estimateTotalGasPrice
+    estimateTotalGasPrice,
   };
 };

@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
+import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { BigNumber, ethers } from "ethers";
 import { useInterval, useLocalStorage } from "usehooks-ts";
 import { v4 } from "uuid";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { RecoveryTx } from "~~/types/business";
+import { RecoveryProcessStatus } from "~~/types/enums";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 
 interface IStartProcessPops {
-  safeAddress:string,
-    modifyBundleId:(arg: string) => void,
-    totalGas:BigNumber,
-    hackedAddress:string,
-    transactions:RecoveryTx[],
-    currentBundleId:string;
+  safeAddress: string;
+  modifyBundleId: (arg: string) => void;
+  totalGas: BigNumber;
+  hackedAddress: string;
+  transactions: RecoveryTx[];
+  currentBundleId: string;
 }
 
 const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
@@ -21,25 +22,7 @@ const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
   5: 10,
 };
 
-export enum RecoveryProcessStatus {
-  initial,
-  gasCovered,
-  cachedDataToClean,
-  noAccountConnected,
-  noSafeAccountConnected,
-  switchFlashbotNetworkAndPayBundleGas,
-  imposible,
-  increaseGas,
-  switchToHacked,
-  signEachTransaction,
-  allTxSigned,
-  sendingBundle,
-  listeningToBundle,
-  success,
-}
-
 const flashbotSigner = ethers.Wallet.createRandom();
-
 
 export const useRecoveryProcess = () => {
   const targetNetwork = getTargetNetwork();
@@ -49,13 +32,12 @@ export const useRecoveryProcess = () => {
   const [sentBlock, setSentBlock] = useLocalStorage<number>("sentBlock", 0);
   const [blockCountdown, setBlockCountdown] = useLocalStorage<number>("blockCountdown", 0);
 
-  const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.initial);
+  const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.INITIAL);
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
   const { address } = useAccount();
-  
+
   const { data: walletClient } = useWalletClient();
   const FLASHBOTS_RELAY_ENDPOINT = `https://relay${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net/`;
-
 
   useEffect(() => {
     (async () => {
@@ -65,14 +47,14 @@ export const useRecoveryProcess = () => {
           new ethers.providers.InfuraProvider(targetNetwork.id),
           flashbotSigner,
           FLASHBOTS_RELAY_ENDPOINT,
-          targetNetwork.network == "goerli" ? "goerli": undefined
+          targetNetwork.network == "goerli" ? "goerli" : undefined,
         ),
       );
     })();
   }, [targetNetwork.id]);
 
   useInterval(async () => {
-    const isNotAbleToListenBundle = stepActive != RecoveryProcessStatus.listeningToBundle || !sentTxHash || sentBlock == 0
+    const isNotAbleToListenBundle = stepActive != RecoveryProcessStatus.LISTEN_BUNDLE || !sentTxHash || sentBlock == 0;
     try {
       if (isNotAbleToListenBundle) return;
       const finalTargetBlock = sentBlock + BLOCKS_IN_THE_FUTURE[targetNetwork.id];
@@ -91,33 +73,31 @@ export const useRecoveryProcess = () => {
         hash: sentTxHash as `0x${string}`,
       });
       if (txReceipt && txReceipt.blockNumber) {
-        setStepActive(RecoveryProcessStatus.success);
+        setStepActive(RecoveryProcessStatus.SUCCESS);
       }
       //   return;
       console.log("TXs not yet mined");
     } catch (e) {}
   }, 5000);
 
-  
-
   const resetStatus = () => {
-    setStepActive(RecoveryProcessStatus.initial);
-  }
+    setStepActive(RecoveryProcessStatus.INITIAL);
+  };
   const validateBundleIsReady = (safeAddress: string) => {
     if (gasCovered) {
-      setStepActive(RecoveryProcessStatus.gasCovered);
+      setStepActive(RecoveryProcessStatus.GAS_PAID);
       return false;
     }
 
     ////////// Enforce switching to the safe address
     if (!address) {
-      setStepActive(RecoveryProcessStatus.noAccountConnected);
+      setStepActive(RecoveryProcessStatus.NO_CONNECTED_ACCOUNT);
       return false;
     } else if (address != safeAddress) {
-      setStepActive(RecoveryProcessStatus.noSafeAccountConnected);
+      setStepActive(RecoveryProcessStatus.NO_SAFE_ACCOUNT);
       return false;
     }
-    setStepActive(RecoveryProcessStatus.switchFlashbotNetworkAndPayBundleGas);
+    setStepActive(RecoveryProcessStatus.SWITCH_RPC_AND_PAY_GAS);
     return true;
   };
 
@@ -135,23 +115,24 @@ export const useRecoveryProcess = () => {
     setGasCovered(true);
   };
 
-
-
-
-  const signRecoveryTransactions = async (hackedAddress:string, transactions:RecoveryTx[],currentBundleId:string, surpass: boolean = false) => {
-
+  const signRecoveryTransactions = async (
+    hackedAddress: string,
+    transactions: RecoveryTx[],
+    currentBundleId: string,
+    surpass: boolean = false,
+  ) => {
     if (!surpass && !gasCovered) {
       alert("How did you come here without covering the gas fee first??");
-      resetStatus()
+      resetStatus();
       return;
     }
 
     ////////// Enforce switching to the hacked address
     if (address != hackedAddress) {
-      setStepActive(RecoveryProcessStatus.switchToHacked);
+      setStepActive(RecoveryProcessStatus.SWITCH_TO_HACKED_ACCOUNT);
       return;
     }
-    setStepActive(RecoveryProcessStatus.signEachTransaction);
+    setStepActive(RecoveryProcessStatus.SIGN_RECOVERY_TXS);
     ////////// Sign the transactions in the basket one after another
     try {
       for (const tx of transactions) {
@@ -161,19 +142,17 @@ export const useRecoveryProcess = () => {
       await sendBundle(currentBundleId);
     } catch (e) {
       alert(`FAILED TO SIGN TXS Error: ${e}`);
-      resetStatus()
+      resetStatus();
     }
   };
 
-
-
-  const sendBundle = async (currentBundleId:string) => {
+  const sendBundle = async (currentBundleId: string) => {
     if (!flashbotsProvider) {
       alert("Flashbot provider not available");
-      resetStatus()
+      resetStatus();
       return;
     }
-    setStepActive(RecoveryProcessStatus.sendingBundle);
+    setStepActive(RecoveryProcessStatus.SEND_BUNDLE);
     try {
       const finalBundle = await (
         await fetch(
@@ -182,7 +161,7 @@ export const useRecoveryProcess = () => {
       ).json();
       if (!finalBundle || !finalBundle.rawTxs) {
         alert("Couldn't fetch latest bundle");
-        resetStatus()
+        resetStatus();
         return;
       }
 
@@ -203,8 +182,8 @@ export const useRecoveryProcess = () => {
           }),
         });
 
-        await response.json()
-        setStepActive(RecoveryProcessStatus.listeningToBundle);
+        await response.json();
+        setStepActive(RecoveryProcessStatus.LISTEN_BUNDLE);
       } catch (e) {
         console.error(e);
         setSentTxHash("");
@@ -221,11 +200,14 @@ export const useRecoveryProcess = () => {
     }
   };
 
-
-
-
-
-  const startRecoveryProcess = async ({safeAddress,modifyBundleId,totalGas,currentBundleId, hackedAddress, transactions }:IStartProcessPops) => {
+  const startRecoveryProcess = async ({
+    safeAddress,
+    modifyBundleId,
+    totalGas,
+    currentBundleId,
+    hackedAddress,
+    transactions,
+  }: IStartProcessPops) => {
     const isValid = validateBundleIsReady(safeAddress);
     if (!isValid) {
       return;
@@ -234,13 +216,13 @@ export const useRecoveryProcess = () => {
       ////////// Create new bundle uuid & add corresponding RPC 'subnetwork' to Metamask
       const bundleId = await changeFlashbotNetwork();
       modifyBundleId(bundleId);
-      setStepActive(RecoveryProcessStatus.increaseGas);
+      setStepActive(RecoveryProcessStatus.INCREASE_PRIORITY_FEE);
       // ////////// Cover the envisioned total gas fee from safe account
-      await payTheGas(totalGas, hackedAddress)
-      signRecoveryTransactions(hackedAddress, transactions, currentBundleId,true);
+      await payTheGas(totalGas, hackedAddress);
+      signRecoveryTransactions(hackedAddress, transactions, currentBundleId, true);
       return;
     } catch (e) {
-      resetStatus()
+      resetStatus();
       alert(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
     }
   };
@@ -276,12 +258,12 @@ export const useRecoveryProcess = () => {
   };
 
   return {
-    data:stepActive,
+    data: stepActive,
     sentBlock,
     sentTxHash,
     blockCountdown,
     startRecoveryProcess,
     signRecoveryTransactions,
-    resetStatus
-  }
+    resetStatus,
+  };
 };
