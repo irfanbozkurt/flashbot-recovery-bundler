@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Alchemy, AssetTransfersCategory, AssetTransfersResult, Network } from "alchemy-sdk";
 import { BigNumber, ethers } from "ethers";
+import { useLocalStorage } from "usehooks-ts";
 import { usePublicClient } from "wagmi";
 import {
   AutoDetectedERC20Info,
@@ -18,12 +19,11 @@ const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
 
-interface IProps {
-  hackedAddress: string;
-  safeAddress: string;
-}
-
 export const useAutodetectAssets = () => {
+  const [autoDetectedAssets, setAutoDetectedAssets] = useLocalStorage<{
+    [account: string]: RecoveryTx[];
+  }>("autoDetectedAssets", {});
+
   const targetNetwork = getTargetNetwork();
   const [alchemy] = useState<Alchemy>(
     new Alchemy({
@@ -51,7 +51,16 @@ export const useAutodetectAssets = () => {
       .map(res => res.transfers)
       .flat();
 
-  const getAutodetectedAssets = async ({ hackedAddress, safeAddress }: IProps) => {
+  const getAutodetectedAssets = async (
+    hackedAddress: string,
+    safeAddress: string,
+    forceFetch: boolean = false,
+  ): Promise<RecoveryTx[] | undefined> => {
+    if (autoDetectedAssets[hackedAddress] && autoDetectedAssets[hackedAddress].length > 0 && !forceFetch) {
+      console.log("Assets exist in data. Returning from cache.");
+      return autoDetectedAssets[hackedAddress];
+    }
+
     if (!ethers.utils.isAddress(hackedAddress)) {
       return;
     }
@@ -314,6 +323,12 @@ export const useAutodetectAssets = () => {
         }),
       );
       const result: RecoveryTx[] = [...autoDetectedErc20Txs, ...autoDetectedErc721Txs, ...autoDetectedErc1155Txs];
+
+      setAutoDetectedAssets(prev => {
+        prev[hackedAddress] = result;
+        return prev;
+      });
+
       return result;
     } catch (e) {
       console.error(`Error fetching assets of hacked account: ${e}`);

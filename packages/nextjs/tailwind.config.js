@@ -90,6 +90,11 @@ module.exports = {
   theme: {
     // Extend Tailwind classes (e.g. font-bai-jamjuree, animate-grow)
     extend: {
+      placeholderOpacity: {
+        10: "0.1",
+        15: "0.15",
+        20: "0.2",
+      },
       fontFamily: {
         "bai-jamjuree": ["Bai Jamjuree", "sans-serif"],
       },
