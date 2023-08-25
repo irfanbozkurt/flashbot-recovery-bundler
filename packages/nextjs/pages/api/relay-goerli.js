@@ -31,14 +31,14 @@ export default async function handler(req, res) {
     submissionPromises.push(goerliFlashbotProvider.sendRawBundle(signedBundle, currentBlockNumber + i));
   const results = await Promise.all(submissionPromises);
 
-  console.log("-------------------------------- SUBMITTED");
-  Promise.all(
-    results.map(r =>
-      r.wait().then(waited => {
-        console.log("ONE SUBMISSION WAITED. RESULT: " + waited);
-      }),
-    ),
-  );
+  // console.log("-------------------------------- SUBMITTED");
+  // Promise.all(
+  //   results.map(r =>
+  //     r.wait().then(waited => {
+  //       console.log("ONE SUBMISSION WAITED. RESULT: " + waited);
+  //     }),
+  //   ),
+  // );
 
   res.status(203).json({ response: `Bundle submitted` });
 }
