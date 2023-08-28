@@ -1,5 +1,6 @@
 import React from "react";
 import { CustomPortal } from "~~/components/CustomPortal/CustomPortal";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import ClockSvg from "~~/public/assets/flashbotRecovery/clock.svg";
 import LogoSvg from "~~/public/assets/flashbotRecovery/logo.svg";
 import SuccessSvg from "~~/public/assets/flashbotRecovery/success.svg";
@@ -16,6 +17,7 @@ interface IProps {
   hackedAddress: string;
   blockCountdown: number;
 }
+
 export const RecoveryProcess = ({
   recoveryStatus,
   startSigning,
@@ -26,12 +28,14 @@ export const RecoveryProcess = ({
   safeAddress,
   hackedAddress,
 }: IProps) => {
+  const {showError} = useShowError();
+
   if (recoveryStatus == RecoveryProcessStatus.INITIAL) {
     return <></>;
   }
 
   if (recoveryStatus == RecoveryProcessStatus.GAS_PAID) {
-    alert("you already covered the gas. If you're in a confussy situation, clear cookies and refresh page.");
+    showError("you already covered the gas. If you're in a confussy situation, clear cookies and refresh page.");
     return;
   }
 

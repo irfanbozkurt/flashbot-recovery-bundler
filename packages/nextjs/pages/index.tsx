@@ -5,11 +5,14 @@ import { NextPage } from "next";
 import { useLocalStorage } from "usehooks-ts";
 import { useAccount } from "wagmi";
 import { CustomHeader } from "~~/components/CustomHeader/CustomHeader";
+import { CustomPortal } from "~~/components/CustomPortal/CustomPortal";
 import { MetaHeader } from "~~/components/MetaHeader";
 import { BundlingProcess } from "~~/components/Processes/BundlingProcess/BundlingProcess";
 import { ConnectionProcess } from "~~/components/Processes/ConnectionProcess/ConnectionProcess";
 import { RecoveryProcess } from "~~/components/Processes/RecoveryProcess/RecoveryProcess";
 import { useRecoveryProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
+import ErrorSvg from "~~/public/assets/flashbotRecovery/error.svg";
 import { RecoveryTx } from "~~/types/business";
 import { BundlingSteps, RecoveryProcessStatus } from "~~/types/enums";
 
@@ -21,6 +24,7 @@ const Home: NextPage = () => {
   const [totalGasEstimate, setTotalGasEstimate] = useState<BigNumber>(BigNumber.from("0"));
   const [isOnBasket, setIsOnBasket] = useState(false);
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
+  const { error, resetError } = useShowError();
 
   const { data: processStatus, startRecoveryProcess, signRecoveryTransactions, blockCountdown } = useRecoveryProcess();
 
@@ -104,13 +108,16 @@ const Home: NextPage = () => {
           hackedAddress={hackedAddress}
         />
 
-        {/* <CustomPortal
-          title={"Clear cache"}
-          description={
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
-          }
-          image={VideoSvg}
-        /> */}
+        {error != "" ? (
+          <CustomPortal
+            close={() => resetError()}
+            title={"Something wrong has happend"}
+            description={error}
+            image={ErrorSvg}
+          />
+        ) : (
+          <></>
+        )}
 
         {/* <CustomPortal
           title={"Switch to hacked adress"}

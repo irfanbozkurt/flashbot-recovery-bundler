@@ -11,6 +11,8 @@ import { AddressInput, InputBase } from "~~/components/scaffold-eth";
 import { ERC721Tx } from "~~/types/business";
 import { ERC721_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
+
 
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 
@@ -18,10 +20,10 @@ export const ERC721Form = ({ hackedAddress, safeAddress, addAsset, close }: ITok
   const [contractAddress, setContractAddress] = useState<string>("");
   const [tokenId, setTokenId] = useState<string>("");
   const publicClient = usePublicClient({ chainId: getTargetNetwork().id });
-
+  const {showError} = useShowError()
   const addErc721TxToBasket = async () => {
     if (!isAddress(contractAddress) || !tokenId) {
-      alert("Provide a contract and a token ID");
+      showError("Provide a contract and a token ID");
       return;
     }
 
@@ -36,7 +38,7 @@ export const ERC721Form = ({ hackedAddress, safeAddress, addAsset, close }: ITok
     } catch (e) {}
 
     if (!ownerOfGivenTokenId || ownerOfGivenTokenId.toString() != hackedAddress) {
-      alert(`Couldn't verify hacked account's ownership. Cannot add to the basket...`);
+      showError(`Couldn't verify hacked account's ownership. Cannot add to the basket...`);
       return;
     }
 

@@ -7,6 +7,7 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { RecoveryTx } from "~~/types/business";
 import { RecoveryProcessStatus } from "~~/types/enums";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useShowError } from "./useShowError";
 
 interface IStartProcessPops {
   safeAddress: string;
@@ -31,6 +32,7 @@ export const useRecoveryProcess = () => {
   const [sentTxHash, setSentTxHash] = useLocalStorage<string>("sentTxHash", "");
   const [sentBlock, setSentBlock] = useLocalStorage<number>("sentBlock", 0);
   const [blockCountdown, setBlockCountdown] = useLocalStorage<number>("blockCountdown", 0);
+  const {showError} = useShowError();
 
   const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.INITIAL);
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
@@ -53,6 +55,7 @@ export const useRecoveryProcess = () => {
     })();
   }, [targetNetwork.id]);
 
+  
   useInterval(async () => {
     const isNotAbleToListenBundle = stepActive != RecoveryProcessStatus.LISTEN_BUNDLE || !sentTxHash || sentBlock == 0;
     try {
@@ -63,7 +66,7 @@ export const useRecoveryProcess = () => {
       setBlockCountdown(blockDelta);
 
       if (blockDelta < 0) {
-        alert("Error, try again");
+        showError("Error, try again");
         setSentBlock(0);
         setSentTxHash("");
         resetStatus();
@@ -122,7 +125,7 @@ export const useRecoveryProcess = () => {
     surpass: boolean = false,
   ) => {
     if (!surpass && !gasCovered) {
-      alert("How did you come here without covering the gas fee first??");
+      showError("How did you come here without covering the gas fee first??");
       resetStatus();
       return;
     }
@@ -141,14 +144,14 @@ export const useRecoveryProcess = () => {
       setGasCovered(false);
       await sendBundle(currentBundleId);
     } catch (e) {
-      alert(`FAILED TO SIGN TXS Error: ${e}`);
+      showError(`FAILED TO SIGN TXS Error: ${e}`);
       resetStatus();
     }
   };
 
   const sendBundle = async (currentBundleId: string) => {
     if (!flashbotsProvider) {
-      alert("Flashbot provider not available");
+      showError("Flashbot provider not available");
       resetStatus();
       return;
     }
@@ -160,7 +163,7 @@ export const useRecoveryProcess = () => {
         )
       ).json();
       if (!finalBundle || !finalBundle.rawTxs) {
-        alert("Couldn't fetch latest bundle");
+        showError("Couldn't fetch latest bundle");
         resetStatus();
         return;
       }
@@ -188,14 +191,14 @@ export const useRecoveryProcess = () => {
         console.error(e);
         setSentTxHash("");
         setSentBlock(0);
-        alert("Error submitting bundles. Check console for details.");
+        showError("Error submitting bundles. Check console for details.");
         resetStatus();
       }
     } catch (e) {
       console.error(e);
       setSentTxHash("");
       setSentBlock(0);
-      alert("Error submitting bundles. Check console for details.");
+      showError("Error submitting bundles. Check console for details.");
       resetStatus();
     }
   };
@@ -223,7 +226,7 @@ export const useRecoveryProcess = () => {
       return;
     } catch (e) {
       resetStatus();
-      alert(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
+      showError(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
     }
   };
 

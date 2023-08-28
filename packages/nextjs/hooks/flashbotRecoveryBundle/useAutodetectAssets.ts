@@ -14,6 +14,7 @@ import {
 } from "~~/types/business";
 import { ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useShowError } from "./useShowError";
 
 const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
@@ -24,6 +25,7 @@ export const useAutodetectAssets = () => {
     [account: string]: RecoveryTx[];
   }>("autoDetectedAssets", {});
 
+  const {showError} = useShowError();
   const targetNetwork = getTargetNetwork();
   const [alchemy] = useState<Alchemy>(
     new Alchemy({
@@ -51,6 +53,7 @@ export const useAutodetectAssets = () => {
       .map(res => res.transfers)
       .flat();
 
+      
   const getAutodetectedAssets = async (
     hackedAddress: string,
     safeAddress: string,
@@ -65,7 +68,7 @@ export const useAutodetectAssets = () => {
       return;
     }
     if (!alchemy) {
-      alert("Seems Alchemy API rate limit has been reached. Contact irbozk@gmail.com");
+      showError("Seems Alchemy API rate limit has been reached. Contact irbozk@gmail.com");
       return;
     }
 

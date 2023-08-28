@@ -11,6 +11,8 @@ import { AddressInput, InputBase } from "~~/components/scaffold-eth";
 import { ERC1155Tx } from "~~/types/business";
 import { ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
+
 
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
 
@@ -18,10 +20,10 @@ export const ERC1155Form = ({ hackedAddress, safeAddress, addAsset, close }: ITo
   const [contractAddress, setContractAddress] = useState<string>("");
   const [tokenIds, setTokenIds] = useState<string>("");
   const publicClient = usePublicClient({ chainId: getTargetNetwork().id });
-
+  const {showError} = useShowError()
   const addErc1155TxToBasket = async () => {
     if (!isAddress(contractAddress) || !tokenIds) {
-      alert("Provide an ERC1155 contract and token IDs");
+      showError("Provide an ERC1155 contract and token IDs");
       return;
     }
 
@@ -44,7 +46,7 @@ export const ERC1155Form = ({ hackedAddress, safeAddress, addAsset, close }: ITo
         }
       }
       if (tokenIdsWithInvalidBalances.length > 0) {
-        alert(
+        showError(
           `Remove following tokenIds as hacked account does not own them: ${tokenIdsWithInvalidBalances.toString()}`,
         );
         return;
@@ -73,7 +75,7 @@ export const ERC1155Form = ({ hackedAddress, safeAddress, addAsset, close }: ITo
       addAsset(newErc1155Tx);
     } catch (e) {
       console.error(e);
-      alert(`Couldn't read the contract. See the console for the error.`);
+      showError(`Couldn't read the contract. See the console for the error.`);
       return;
     }
   };

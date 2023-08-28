@@ -3,6 +3,7 @@ import { BigNumber, ethers } from "ethers";
 import { usePublicClient } from "wagmi";
 import { RecoveryTx } from "~~/types/business";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useShowError } from "./useShowError";
 
 const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
   1: 7,
@@ -12,7 +13,7 @@ const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
 export const useGasEstimation = () => {
   const targetNetwork = getTargetNetwork();
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
-
+  const {showError} = useShowError();
   const estimateTotalGasPrice = async (txs: RecoveryTx[], deleteTransaction: (id: number) => void) => {
     const tempProvider = new ethers.providers.InfuraProvider(targetNetwork.id, "416f5398fa3d4bb389f18fd3fa5fb58c");
     try {
@@ -32,13 +33,14 @@ export const useGasEstimation = () => {
           }),
       );
 
+      
       return estimates
         .reduce((acc: BigNumber, val: BigNumber) => acc.add(val), BigNumber.from("0"))
         .mul(await maxBaseFeeInFuture())
         .mul(105)
         .div(100);
     } catch (e) {
-      alert(
+      showError(
         "Error estimating gas prices. Something can be wrong with one of the transactions. Check the console and remove problematic tx.",
       );
       console.error(e);
