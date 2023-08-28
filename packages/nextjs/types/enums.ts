@@ -20,5 +20,6 @@ export enum RecoveryProcessStatus {
   RECOVERY_TXS_SIGNED,
   SEND_BUNDLE,
   LISTEN_BUNDLE,
+  DONATE,
   SUCCESS,
 }

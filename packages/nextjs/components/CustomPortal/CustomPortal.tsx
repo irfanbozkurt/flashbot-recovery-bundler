@@ -10,6 +10,7 @@ interface IProps {
   title: string;
   image?: string;
   video?: string;
+  children?: JSX.Element;
   close?: () => void;
   description: string;
   button?: {
@@ -19,7 +20,7 @@ interface IProps {
   };
   indicator?: number;
 }
-export const CustomPortal = ({ indicator, title, image, video, description, button, close }: IProps) => {
+export const CustomPortal = ({ indicator, title, image, children, video, description, button, close }: IProps) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export const CustomPortal = ({ indicator, title, image, video, description, butt
 
               {!!video ? <Image className={`${styles.image}`} src={video} alt={""} /> : <></>}
               <p className={`${styles.text} text-secondary-content`}>{description}</p>
+              {!!children ? children : <></>}
               {!!button ? (
                 <CustomButton
                   type="btn-primary"
