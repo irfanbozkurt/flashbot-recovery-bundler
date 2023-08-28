@@ -14,8 +14,9 @@ type MetaHeaderProps = {
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/` : "/";
 
 export const MetaHeader = ({
+  //TODO Modify after find an app name
   title = "Flashbot Bundler for Recoveries",
-  description = "Built with 🏗 Scaffold-ETH 2",
+  description = "I've successfully recovered my hacked assets using this powerful tool. #AssetRecovery",
   image = "thumbnail.jpg",
   twitterCard = "summary_large_image",
   children,

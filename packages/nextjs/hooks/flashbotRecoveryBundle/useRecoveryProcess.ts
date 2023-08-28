@@ -260,6 +260,10 @@ export const useRecoveryProcess = () => {
     }
   };
 
+  const showTipsModal = () => {
+    setStepActive(RecoveryProcessStatus.DONATE)
+  }
+
   return {
     data: stepActive,
     sentBlock,
@@ -268,5 +272,6 @@ export const useRecoveryProcess = () => {
     startRecoveryProcess,
     signRecoveryTransactions,
     resetStatus,
+    showTipsModal
   };
 };

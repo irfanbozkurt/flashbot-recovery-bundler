@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
+import Image from "next/image";
+import styles from "./recoveryProcess.module.css";
 import { CustomPortal } from "~~/components/CustomPortal/CustomPortal";
+import { InputBase } from "~~/components/scaffold-eth";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import ClockSvg from "~~/public/assets/flashbotRecovery/clock.svg";
 import LogoSvg from "~~/public/assets/flashbotRecovery/logo.svg";
 import SuccessSvg from "~~/public/assets/flashbotRecovery/success.svg";
+import TelegramSvg from "~~/public/assets/flashbotRecovery/telegram.svg";
+import TipsSvg from "~~/public/assets/flashbotRecovery/tips.svg";
+import TwitterSvg from "~~/public/assets/flashbotRecovery/twitter.svg";
 import VideoSvg from "~~/public/assets/flashbotRecovery/video.svg";
 import { RecoveryProcessStatus } from "~~/types/enums";
 
@@ -11,6 +17,7 @@ interface IProps {
   recoveryStatus: RecoveryProcessStatus;
   startSigning: () => void;
   finishProcess: () => void;
+  showTipsModal: () => void;
   startProcess: () => void;
   connectedAddress: string | undefined;
   safeAddress: string;
@@ -23,12 +30,14 @@ export const RecoveryProcess = ({
   startSigning,
   startProcess,
   finishProcess,
+  showTipsModal,
   blockCountdown,
   connectedAddress,
   safeAddress,
   hackedAddress,
 }: IProps) => {
   const { showError } = useShowError();
+  const [donationValue, setDonationValue] = useState<string>("");
 
   if (recoveryStatus == RecoveryProcessStatus.INITIAL) {
     return <></>;
@@ -38,7 +47,7 @@ export const RecoveryProcess = ({
     showError(
       "It appears that gas costs have been covered for this action. If you're encountering any confusion, consider clearing your cookies and refreshing the page.",
     );
-     //TODO provide clear data mechanism title "Gas Covered Already"
+    //TODO provide clear data mechanism title "Gas Covered Already"
     return;
   }
 
@@ -51,7 +60,7 @@ export const RecoveryProcess = ({
         }
         image={VideoSvg}
       />
-        //TODO provide clear data mechanism
+      //TODO provide clear data mechanism
     );
   }
 
@@ -86,7 +95,9 @@ export const RecoveryProcess = ({
     return (
       <CustomPortal
         title={"Increase the gas"}
-        description={"We recommend set a hight gas to ensure a successful asset recovery. Your increased gas allocation will facilitate the seamless completion of the transaction."}
+        description={
+          "We recommend set a hight gas to ensure a successful asset recovery. Your increased gas allocation will facilitate the seamless completion of the transaction."
+        }
         image={VideoSvg}
       />
     );
@@ -125,7 +136,6 @@ export const RecoveryProcess = ({
     );
   }
 
-
   if (recoveryStatus == RecoveryProcessStatus.LISTEN_BUNDLE) {
     return (
       <CustomPortal
@@ -144,15 +154,57 @@ export const RecoveryProcess = ({
       <CustomPortal
         title={"Your assets have been recovered!"}
         description={
-          "Check your safe wallet for your retrieved assets. Share your journey and consider support us with a tip to continue serving the crypto community."
+          "Check your safe wallet for your retrieved assets. Share your journey and consider to support us with a tip to continue serving the crypto community."
         }
         button={{
           text: "Finish",
-          disabled: connectedAddress !== hackedAddress,
-          action: () => finishProcess(),
+          disabled: false,
+          action: () => showTipsModal(),
         }}
         image={SuccessSvg}
-      />
+      >
+        <div className={styles.shareButtons}>
+          <a
+            href="https://twitter.com/intent/tweet?url=https://yourwebsite.com&text=I%20have%20been%20helped%20to%20recover%20my%20assets%20with%20this%20amazing%20tool"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image width={40} src={TwitterSvg} alt={""} />
+          </a>
+          <a
+            href="https://t.me/share/url?url=https://yourwebsite.com&text=I%20have%20been%20helped%20to%20recover%20my%20assets%20with%20this%20amazing%20tool"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image width={40} src={TelegramSvg} alt={""} />
+          </a>
+        </div>
+      </CustomPortal>
+    );
+  }
+  if (recoveryStatus !== RecoveryProcessStatus.DONATE) {
+    return (
+      <CustomPortal
+        title={"Support Our Mission"}
+        description={
+          "Your contribution can significantly impact our mission to provide safe and free tools that empower the community."
+        }
+        button={{
+          text: "Finish",
+          disabled: false,
+          action: () => finishProcess(),
+        }}
+        image={TipsSvg}
+      >
+        <div className={styles.inputContainer}>
+          <label className={styles.label} htmlFor="tip">
+            Tip
+          </label>
+          <div className="mt-2" />
+          <InputBase name="tip" placeholder="0.0" value={donationValue} onChange={setDonationValue} />
+          <span className={`${styles.eth} text-base-100`}>ETH</span>
+        </div>
+      </CustomPortal>
     );
   }
 

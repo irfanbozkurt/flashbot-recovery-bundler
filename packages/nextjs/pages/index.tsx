@@ -26,7 +26,7 @@ const Home: NextPage = () => {
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
   const { error, resetError } = useShowError();
 
-  const { data: processStatus, startRecoveryProcess, signRecoveryTransactions, blockCountdown } = useRecoveryProcess();
+  const { data: processStatus, startRecoveryProcess, signRecoveryTransactions, blockCountdown, showTipsModal } = useRecoveryProcess();
 
   const startSigning = () => {
     signRecoveryTransactions(hackedAddress, unsignedTxs, currentBundleId, false);
@@ -56,6 +56,8 @@ const Home: NextPage = () => {
     }
     return BundlingSteps.HACKED_ADDRESS_INPUT;
   };
+
+  
   const reload = () => {
     localStorage.clear();
     window.location.reload();
@@ -101,6 +103,7 @@ const Home: NextPage = () => {
           recoveryStatus={processStatus}
           finishProcess={reload}
           startSigning={startSigning}
+          showTipsModal={showTipsModal}
           startProcess={startRecovery}
           blockCountdown={blockCountdown}
           connectedAddress={connectedAddress}
