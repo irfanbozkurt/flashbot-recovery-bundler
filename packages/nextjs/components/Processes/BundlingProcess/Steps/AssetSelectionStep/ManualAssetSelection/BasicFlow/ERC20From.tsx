@@ -11,12 +11,13 @@ import { AddressInput } from "~~/components/scaffold-eth";
 import { ERC20Tx } from "~~/types/business";
 import { ERC20_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 
 const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
 
 export const ERC20Form = ({ hackedAddress, safeAddress, addAsset, close }: ITokenForm) => {
   const [contractAddress, setContractAddress] = useState<string>("");
-
+  const {showError} = useShowError()
   let erc20Balance: string = "NO INFO";
   try {
     let { data } = useContractRead({
@@ -35,14 +36,15 @@ export const ERC20Form = ({ hackedAddress, safeAddress, addAsset, close }: IToke
     // Most probably the contract address is not valid as user is
     // still typing, so ignore.
   }
+  
 
   const addErc20TxToBasket = (balance: string) => {
     if (!isAddress(contractAddress)) {
-      alert("Provide a contract first");
+      showError("Provide a contract first");
       return;
     }
     if (balance == "NO INFO") {
-      alert("Hacked account has no balance in given erc20 contract");
+      showError("Hacked account has no balance in given erc20 contract");
       return;
     }
 

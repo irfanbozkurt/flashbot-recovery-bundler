@@ -3,6 +3,7 @@ import { AbiFunction } from "abitype";
 import { ethers } from "ethers";
 import { FunctionFragment } from "ethers/lib/utils";
 import { Address } from "viem";
+
 import {
   ContractInput,
   IntegerInput,
@@ -13,6 +14,7 @@ import {
 } from "~~/components/scaffold-eth";
 import { CustomTx, RecoveryTx } from "~~/types/business";
 import { notification } from "~~/utils/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 
 type WriteOnlyFunctionFormProps = {
   abiFunction: AbiFunction;
@@ -31,6 +33,8 @@ export const CustomContractWriteForm = ({
   hackedAddress,
   contractAddress,
 }: WriteOnlyFunctionFormProps) => {
+  const {showError} = useShowError();
+
   const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
   const [txValue, setTxValue] = useState<string | bigint>("");
 
@@ -74,7 +78,7 @@ export const CustomContractWriteForm = ({
             onClick={async () => {
               try {
                 if (!fragmentString) {
-                  alert("refresh page and try again");
+                  showError("refresh page and try again");
                   return;
                 }
 

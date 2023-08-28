@@ -4,6 +4,7 @@ import { isAddress } from "ethers/lib/utils";
 import { motion } from "framer-motion";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { AddressInput } from "~~/components/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 
 interface IProps {
   isVisible: boolean;
@@ -11,20 +12,20 @@ interface IProps {
   onSubmit: (address: string) => void;
 }
 export const HackedAddressStep = ({ isVisible, safeAddress, onSubmit }: IProps) => {
-  if (!isVisible) {
-    return <></>;
-  }
-
+  const {showError} = useShowError();
   const [hackedAddress, setHackedAddressCore] = useState<string>("");
   const setHackedAddress = (hackedAddress: string) => {
     if (safeAddress == hackedAddress) {
-      //TODO: modal
-      alert("Cannot select safe and hacked addresses the same");
+      showError("Cannot select safe and hacked addresses the same");
       setHackedAddressCore("");
       return;
     }
     setHackedAddressCore(hackedAddress);
   };
+  
+  if (!isVisible) {
+    return <></>;
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
@@ -43,7 +44,7 @@ export const HackedAddressStep = ({ isVisible, safeAddress, onSubmit }: IProps) 
         text={"Continue"}
         onClick={() => {
           if (!isAddress(hackedAddress)) {
-            alert("Given hacked address is not a valid address");
+            showError("Given hacked address is not a valid address");
             return;
           }
           onSubmit(hackedAddress);
