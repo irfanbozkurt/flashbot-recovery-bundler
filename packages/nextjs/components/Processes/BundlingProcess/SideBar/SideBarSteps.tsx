@@ -11,28 +11,28 @@ export const SideBarSteps = ({ activeStep }: ISideBar) => {
       <SideBarStepInfo
         index={BundlingSteps.HACKED_ADDRESS_INPUT}
         activeStep={activeStep}
-        title={"Enter the hacked address"}
+        title={"Provide the Hacked Address"}
         description={"Provide the address that was hacked so we can search for your assets."}
       />
       <SideBarStepInfo
         index={BundlingSteps.ASSET_SELECTION}
         activeStep={activeStep}
-        title={"Select your assets"}
+        title={"Choose your assets"}
         description={
-          "Your assets will be listed, select the ones you want to transfer or add manually if you miss someone"
+          "Choose the assets you wish to transfer from the list, or manually add any missing ones."
         }
       />
       <SideBarStepInfo
         index={BundlingSteps.TX_BUNDLE}
         activeStep={activeStep}
-        title={"Confirm the bundle"}
-        description={"Review the transactions that are going to be generated to recover your assets"}
+        title={"Review the transactions"}
+        description={"Take a moment to review the transactions being generated for asset recovery."}
       />
       <SideBarStepInfo
         index={BundlingSteps.SIGN_RECOVERY_TXS}
         activeStep={activeStep}
         title={"Recover your assets"}
-        description={"Follow the steps to retrieve your assets, this is a critical process, so please be patient."}
+        description={"Follow the steps to retrieve your assets, this is a critical process so please be patient."}
       />
     </div>
   );

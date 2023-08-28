@@ -118,46 +118,6 @@ const Home: NextPage = () => {
         ) : (
           <></>
         )}
-
-        {/* <CustomPortal
-          title={"Switch to hacked adress"}
-          description={
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
-          }
-          image={LogoSvg}
-        /> */}
-        {/* <CustomPortal
-          title={"Rise your gas"}
-          description={
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
-          }
-          image={VideoSvg}
-        /> */}
-        {/* <CustomPortal
-          title={"Wait without refreshing the page"}
-          description={
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
-          }
-          image={LogoSvg}
-        /> */}
-        {/* <CustomPortal
-          title={"Success"}
-          description={
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
-          }
-          image={VideoSvg}
-        /> */}
-        {/* <CustomPortal
-          title={"Error"}
-          description={
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti."
-          }
-          image={VideoSvg}
-          button={{
-            action:() => ({}),
-            text:"Retry"
-          }}
-        /> */}
       </div>
     </>
   );
