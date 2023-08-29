@@ -10,6 +10,12 @@ interface IProps {
   selectAsset: (index: number) => void;
 }
 export const AutoDetectedAssets = ({ isLoading, selectedAssets, selectAsset, accountAssets }: IProps) => {
+
+  if(!isLoading && accountAssets.length === 0){
+    return  <div className={styles.assetList}>
+        <span className={`${styles.noAssets} text-secondary-content`}>We don't have detected any asset</span>
+    </div>
+  }
   return (
     <div className={styles.assetList}>
       {isLoading &&

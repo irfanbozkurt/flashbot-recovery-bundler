@@ -54,7 +54,12 @@
 .loading {
   animation: loading 1s infinite;
 }
-
+.noAssets{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
 @keyframes loading {
   from {
     opacity: 0.3;
