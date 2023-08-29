@@ -31,9 +31,6 @@ export const TransactionBundleStep = ({
   totalGasEstimate,
   setTotalGasEstimate,
 }: IProps) => {
-  if (!isVisible) {
-    return <></>;
-  }
 
   const { estimateTotalGasPrice } = useGasEstimation();
 
@@ -70,6 +67,10 @@ export const TransactionBundleStep = ({
     });
   };
 
+  if (!isVisible) {
+    return <></>;
+  }
+  
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
       <h2 className={styles.title}>Your transactions</h2>

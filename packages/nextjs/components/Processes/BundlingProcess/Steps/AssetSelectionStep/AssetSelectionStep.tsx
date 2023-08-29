@@ -30,9 +30,6 @@ export const AssetSelectionStep = ({
   hackedAddress,
   safeAddress,
 }: IProps) => {
-  if (!isVisible) {
-    return <></>;
-  }
 
   const [isAddingManually, setIsAddingManually] = useState(false);
   const { getAutodetectedAssets } = useAutodetectAssets();
@@ -81,6 +78,9 @@ export const AssetSelectionStep = ({
     setAccountAssets([]);
     onBack();
   };
+  if (!isVisible) {
+    return <></>;
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
