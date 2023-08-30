@@ -36,12 +36,9 @@ export const BundlingProcess = ({
   setUnsignedTxs,
   startRecovery,
 }: IProps) => {
-  if (!isVisible) {
-    return <></>;
-  }
 
-  const [accountAssets, setAccountAssets] = useLocalStorage<RecoveryTx[]>("accountAssets", []);
-  const [selectedAssetIndices, setSelectedAssetIndices] = useLocalStorage<number[]>("selectedAssetIndices", []);
+  const [accountAssets, setAccountAssets] = useLocalStorage<RecoveryTx[]>(`${hackedAddress}-accountAssets`, []);
+  const [selectedAssetIndices, setSelectedAssetIndices] = useLocalStorage<number[]>(`${hackedAddress}-selectedAssetIndices`, []);
 
   const stateTransitionFunctions = {
     fromHackedAddressInputToAssetSelection: setHackedAddress,
@@ -68,6 +65,11 @@ export const BundlingProcess = ({
     fromBundlingToRecoveryPhase: startRecovery,
   };
 
+  if (!isVisible) {
+    return <></>;
+  }
+
+  
   return (
     <motion.div className={styles.bundling} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <SideBar activeStep={activeStep} hackedAddress={hackedAddress} safeAddress={safeAddress} />
