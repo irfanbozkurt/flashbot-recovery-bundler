@@ -1,12 +1,15 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import styles from "./assetSelectionStep.module.css";
 import { motion } from "framer-motion";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { AutoDetectedAssets } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/AutoDetectedAssets/AutoDetectedAssets";
 import { ManualAssetSelection } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/ManualAssetSelection/ManualAssetSelection";
 import { useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 import { RecoveryTx } from "~~/types/business";
+import BackSvg from "~~/public/assets/flashbotRecovery/back.svg";
+import RefreshSvg from "~~/public/assets/flashbotRecovery/refresh.svg";
+
+import Image from "next/image";
 
 interface IProps {
   isVisible: boolean;
@@ -97,8 +100,9 @@ export const AssetSelectionStep = ({
       />
 
       <div className="flex items-center justify-center">
-        <ArrowPathIcon style={{ marginRight: 400 }} className="h-5 w-5 absolute" onClick={reloadAssets} />
+        <Image src={BackSvg} alt={""} style={{ marginRight: 400 }} className="h-5 w-5 absolute" onClick={onBack}  />
         <h2 className={`${styles.title}`}>Your assets</h2>
+        <Image src={RefreshSvg} alt={""} style={{ marginLeft: 400 }} className="h-5 w-5 absolute" onClick={reloadAssets}  />
       </div>
 
       <AutoDetectedAssets
@@ -108,8 +112,6 @@ export const AssetSelectionStep = ({
         accountAssets={accountAssets}
       />
 
-      <CustomButton type="btn-accent" text={"Back"} onClick={onBackButton} />
-      <div className="m-2" />
       <CustomButton type="btn-accent" text={"Add Manually"} onClick={() => setIsAddingManually(true)} />
       <div className="m-2" />
       <CustomButton type="btn-primary" text={"Continue"} onClick={onAddAssetsClick} />
