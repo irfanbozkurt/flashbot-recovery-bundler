@@ -118,7 +118,7 @@ export const useRecoveryProcess = () => {
     if (block) {
       const maxBaseFeeInFutureBlock = FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(
         block.baseFeePerGas as BigNumber,
-        1,
+        3,
       ).toString();
       const priorityFee = BigNumber.from(10).pow(9).toString();
       return { maxBaseFeeInFutureBlock, priorityFee };
