@@ -73,6 +73,13 @@ export const TransactionBundleStep = ({
   
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
+      <div className={styles.mainContent}>
+      <div className={styles.gasContainer}>
+        <span className={styles.gasValue}>{ethers.utils.formatEther(totalGasEstimate.toString())}</span>
+        <div className="ml-2"></div>
+        <Image height={20} width={20} src={GasSvg} alt="" />
+      </div>
+      <div className="m-4" />
       <h2 className={styles.title}>Your transactions</h2>
       <div className={styles.assetList}>
         {transactions.map((item, i) => (
@@ -82,15 +89,11 @@ export const TransactionBundleStep = ({
       <span className={styles.clear} onClick={clear}>
         Clear all
       </span>
-      <div className={styles.gasContainer}>
-        <Image height={30} width={30} src={GasSvg} alt="" />
-        <div className="m-1" />
-        <span className={styles.gasValue}>{ethers.utils.formatEther(totalGasEstimate.toString())}</span>
-      </div>
       <div className="m-4" />
       <CustomButton type="btn-accent" text={"Back to Assets"} onClick={onBack} />
       <div className="m-2" />
       <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit(totalGasEstimate)} />
+      </div>
     </motion.div>
   );
 };
