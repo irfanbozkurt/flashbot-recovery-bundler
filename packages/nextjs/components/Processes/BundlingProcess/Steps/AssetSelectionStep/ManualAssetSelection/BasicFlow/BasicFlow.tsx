@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { RecoveryTx } from "~~/types/business";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 enum ActiveAssetType {
   _,
@@ -18,7 +19,7 @@ enum ActiveAssetType {
 interface IBasicFlowProps {
   safeAddress: string;
   hackedAddress: string;
-  addAsset: (asset: RecoveryTx) => void;
+  addAsset: (asset: IWrappedRecoveryTx) => void;
 }
 export const BasicFlow = ({ safeAddress, hackedAddress, addAsset }: IBasicFlowProps) => {
   const [activeAssetType, setActiveAssetType] = useState(ActiveAssetType._);
@@ -54,7 +55,7 @@ interface ITokenSelectionProps {
   close: () => void;
   hackedAddress: string;
   safeAddress: string;
-  addAsset: (asset: RecoveryTx) => void;
+  addAsset: (asset: IWrappedRecoveryTx) => void;
 }
 const TokenSelection = ({ close, addAsset, tokenActive, hackedAddress, safeAddress }: ITokenSelectionProps) => {
   const portalSelector = document.querySelector("#myportal2");

@@ -7,13 +7,14 @@ import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { Tabs } from "~~/components/tabs/Tabs";
 import { RecoveryTx } from "~~/types/business";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 interface IProps {
   isVisible: boolean;
   close: () => void;
   hackedAddress: string;
   safeAddress: string;
-  addAsset: (asset: RecoveryTx) => void;
+  addAsset: (asset: IWrappedRecoveryTx) => void;
 }
 export const ManualAssetSelection = ({ isVisible, close, safeAddress, addAsset, hackedAddress }: IProps) => {
   const portalSelector = document.querySelector("#myportal");

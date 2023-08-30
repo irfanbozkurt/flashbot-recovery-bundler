@@ -9,6 +9,7 @@ import { HackedAddressStep } from "~~/components/Processes/BundlingProcess/Steps
 import { TransactionBundleStep } from "~~/components/Processes/BundlingProcess/Steps/TransactionBundleStep/TransactionBundleStep";
 import { RecoveryTx } from "~~/types/business";
 import { BundlingSteps } from "~~/types/enums";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 interface IProps {
   isVisible: boolean;
@@ -37,7 +38,7 @@ export const BundlingProcess = ({
   startRecovery,
 }: IProps) => {
 
-  const [accountAssets, setAccountAssets] = useLocalStorage<RecoveryTx[]>(`${hackedAddress}-accountAssets`, []);
+  const [accountAssets, setAccountAssets] = useLocalStorage<IWrappedRecoveryTx[]>(`${hackedAddress}-accountAssets`, []);
   const [selectedAssetIndices, setSelectedAssetIndices] = useLocalStorage<number[]>(`${hackedAddress}-selectedAssetIndices`, []);
 
   const stateTransitionFunctions = {
@@ -57,7 +58,7 @@ export const BundlingProcess = ({
       if (clearUnsignedTxs) {
         setUnsignedTxs([]);
       } else {
-        selectedIndices = unsignedTxs.map(tx => accountAssets.findIndex(asset => asset.toSign.data == tx.toSign.data));
+        selectedIndices = unsignedTxs.map(tx => accountAssets.findIndex(asset => asset.tx.toSign.data == tx.toSign.data));
       }
       setSelectedAssetIndices(selectedIndices);
       setIsOnBasket(true);

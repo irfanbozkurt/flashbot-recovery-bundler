@@ -2,15 +2,15 @@ import { Dispatch } from "react";
 import styles from "./autoDetectedAssets.module.css";
 import { AutoDetectedAssetItem } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/AutoDetectedAssets/AutoDetectedAssetItem";
 import { RecoveryTx } from "~~/types/business";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 interface IProps {
   isLoading: boolean;
   selectedAssets: number[];
-  accountAssets: RecoveryTx[];
+  accountAssets: IWrappedRecoveryTx[];
   selectAsset: (index: number) => void;
 }
 export const AutoDetectedAssets = ({ isLoading, selectedAssets, selectAsset, accountAssets }: IProps) => {
-
   if(!isLoading && accountAssets.length === 0){
     return  <div className={styles.assetList}>
         <span className={`${styles.noAssets} text-secondary-content`}>We don't have detected any asset</span>
@@ -30,7 +30,8 @@ export const AutoDetectedAssets = ({ isLoading, selectedAssets, selectAsset, acc
       {!isLoading &&
         accountAssets.map((item, i) => (
           <AutoDetectedAssetItem
-            tx={item}
+            tx={item.tx}
+            image={item.image}
             isLoading={false}
             isSelected={selectedAssets.indexOf(i) != -1}
             key={i}

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { AutoDetectedAssets } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/AutoDetectedAssets/AutoDetectedAssets";
 import { ManualAssetSelection } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/ManualAssetSelection/ManualAssetSelection";
-import { useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
+import { IWrappedRecoveryTx, useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 import { RecoveryTx } from "~~/types/business";
 import BackSvg from "~~/public/assets/flashbotRecovery/back.svg";
 import RefreshSvg from "~~/public/assets/flashbotRecovery/refresh.svg";
@@ -15,10 +15,10 @@ interface IProps {
   isVisible: boolean;
   hackedAddress: string;
   safeAddress: string;
-  accountAssets: RecoveryTx[];
+  accountAssets: IWrappedRecoveryTx[];
   selectedAssetIndices: number[];
   setSelectedAssetIndices: Dispatch<SetStateAction<number[]>>;
-  setAccountAssets: Dispatch<SetStateAction<RecoveryTx[]>>;
+  setAccountAssets: Dispatch<SetStateAction<IWrappedRecoveryTx[]>>;
   onBack: () => void;
   onSubmit: (txs: RecoveryTx[]) => void;
 }
@@ -62,7 +62,7 @@ export const AssetSelectionStep = ({
 
   const onAddAssetsClick = () => {
     const txsToAdd = accountAssets.filter((_, i) => selectedAssetIndices.indexOf(i) != -1);
-    onSubmit(txsToAdd);
+    onSubmit(txsToAdd.map(item => item.tx));
   };
 
   const selectAsset = (index: number) => {
@@ -100,7 +100,7 @@ export const AssetSelectionStep = ({
       />
 
       <div className="flex items-center justify-center">
-        <Image src={BackSvg} alt={""} style={{ marginRight: 400 }} className="h-5 w-5 absolute" onClick={onBack}  />
+        <Image src={BackSvg} alt={""} style={{ marginRight: 400 }} className="h-5 w-5 absolute" onClick={onBackButton}  />
         <h2 className={`${styles.title}`}>Your assets</h2>
         <Image src={RefreshSvg} alt={""} style={{ marginLeft: 400 }} className="h-5 w-5 absolute" onClick={reloadAssets}  />
       </div>
