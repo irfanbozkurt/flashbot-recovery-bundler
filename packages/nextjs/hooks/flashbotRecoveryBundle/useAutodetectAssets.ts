@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Alchemy, AssetTransfersCategory, AssetTransfersResult, Network } from "alchemy-sdk";
+import { useShowError } from "./useShowError";
+import {
+  Alchemy,
+  AssetTransfersCategory,
+  AssetTransfersResult,
+  Network,
+  Nft,
+  NftMetadataBatchToken,
+  NftTokenType,
+} from "alchemy-sdk";
 import { BigNumber, ethers } from "ethers";
 import { useLocalStorage } from "usehooks-ts";
 import { usePublicClient } from "wagmi";
@@ -14,18 +23,22 @@ import {
 } from "~~/types/business";
 import { ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { useShowError } from "./useShowError";
 
 const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
 
+export interface IWrappedRecoveryTx {
+  image?: string;
+  tx: RecoveryTx;
+}
+
 export const useAutodetectAssets = () => {
   const [autoDetectedAssets, setAutoDetectedAssets] = useLocalStorage<{
-    [account: string]: RecoveryTx[];
+    [account: string]: IWrappedRecoveryTx[];
   }>("autoDetectedAssets", {});
 
-  const {showError} = useShowError();
+  const { showError } = useShowError();
   const targetNetwork = getTargetNetwork();
   const [alchemy] = useState<Alchemy>(
     new Alchemy({
@@ -53,12 +66,22 @@ export const useAutodetectAssets = () => {
       .map(res => res.transfers)
       .flat();
 
-      
+  const getNftMetadata = async (minimalNfts: NftMetadataBatchToken[]) => {
+    let result = await alchemy.nft.getNftMetadataBatch(minimalNfts);
+
+    return result.map(item => ({
+      contractAddress: item.contract,
+      image: item.rawMetadata?.image,
+      tokenId: item.tokenId,
+      type: item.tokenType,
+    }));
+  };
+
   const getAutodetectedAssets = async (
     hackedAddress: string,
     safeAddress: string,
     forceFetch: boolean = false,
-  ): Promise<RecoveryTx[] | undefined> => {
+  ): Promise<IWrappedRecoveryTx[] | undefined> => {
     if (autoDetectedAssets[hackedAddress] && autoDetectedAssets[hackedAddress].length > 0 && !forceFetch) {
       console.log("Assets exist in data. Returning from cache.");
       return autoDetectedAssets[hackedAddress];
@@ -74,8 +97,9 @@ export const useAutodetectAssets = () => {
 
     const erc20transfers: AssetTransfersResult[] = [],
       erc721transfers: AssetTransfersResult[] = [],
-      erc1155transfers: AssetTransfersResult[] = [];
-
+      erc1155transfers: AssetTransfersResult[] = [],
+      erc1155Minimal: NftMetadataBatchToken[] = [],
+      erc721Minimal: NftMetadataBatchToken[] = []
     try {
       (await fetchAllAssetTransfersOfHackedAccount(hackedAddress)).forEach(tx => {
         if (tx.category == AssetTransfersCategory.ERC20) {
@@ -261,6 +285,13 @@ export const useAutodetectAssets = () => {
               /* ignore */
             }
 
+            const result: NftMetadataBatchToken[] = ownedTokenIds.map(tokenId => ({
+              contractAddress: erc721contract as `0x${string}`,
+              tokenId: parseInt(tokenId).toString(),
+              tokenType: NftTokenType.ERC721,
+            }));
+            erc721Minimal.push(...result);
+
             const newErc721txs: ERC721Tx[] = ownedTokenIds.map(tokenId => {
               const newErc721tx: ERC721Tx = {
                 type: "erc721",
@@ -297,8 +328,13 @@ export const useAutodetectAssets = () => {
           } catch (e) {
             /* ignore */
           }
-
           const tokenIds = Object.keys(tokenIdsAndBalances);
+          const result: NftMetadataBatchToken[] = tokenIds.map(tokenId => ({
+            contractAddress: erc1155contract as `0x${string}`,
+            tokenId,
+            tokenType: NftTokenType.ERC1155,
+          }));
+          erc1155Minimal.push(...result);
           const balances: string[] = [];
           for (let i = 0; i < tokenIds.length; i++) {
             balances.push(tokenIdsAndBalances[tokenIds[i]]);
@@ -325,7 +361,31 @@ export const useAutodetectAssets = () => {
           return newErc1155Tx;
         }),
       );
-      const result: RecoveryTx[] = [...autoDetectedErc20Txs, ...autoDetectedErc721Txs, ...autoDetectedErc1155Txs];
+      const allMinimalNft = [...erc1155Minimal, ...erc721Minimal];
+      const allMetadata = allMinimalNft.length > 0 ? await getNftMetadata(allMinimalNft) : [];
+      const result: IWrappedRecoveryTx[] = [
+        ...autoDetectedErc20Txs,
+        ...autoDetectedErc721Txs,
+        ...autoDetectedErc1155Txs,
+      ].map(tx => {
+        if (tx.type === "erc721") {
+          let tx721 = tx as ERC721Tx;
+          let metadata = allMetadata.find(meta => meta.tokenId === tx721.tokenId);
+          return {
+            image: metadata?.image,
+            tx: tx,
+          };
+        }
+        if (tx.type === "erc1155") {
+          let tx1155 = tx as ERC1155Tx;
+          let metadata = allMetadata.find(meta => tx1155.tokenIds.includes(meta.tokenId));
+          return {
+            image: metadata?.image,
+            tx: tx,
+          };
+        }
+        return { tx } as IWrappedRecoveryTx;
+      });
 
       setAutoDetectedAssets(prev => {
         prev[hackedAddress] = result;

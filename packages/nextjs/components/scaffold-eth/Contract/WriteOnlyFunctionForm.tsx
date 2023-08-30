@@ -15,10 +15,11 @@ import {
 import { CustomTx, RecoveryTx } from "~~/types/business";
 import { notification } from "~~/utils/scaffold-eth";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 type WriteOnlyFunctionFormProps = {
   abiFunction: AbiFunction;
-  addUnsignedTx: (newTx: RecoveryTx) => void;
+  addUnsignedTx: (newTx: IWrappedRecoveryTx) => void;
   contractAddress: Address;
   hackedAddress: Address;
   fragmentString: string;
@@ -99,7 +100,7 @@ export const CustomContractWriteForm = ({
                   },
                 };
 
-                addUnsignedTx(customTx);
+                addUnsignedTx({tx:customTx});
 
                 setForm(() => getInitialFormState(abiFunction));
                 setTxValue(0n);

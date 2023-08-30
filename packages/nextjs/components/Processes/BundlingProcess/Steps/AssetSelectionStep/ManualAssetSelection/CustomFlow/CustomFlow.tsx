@@ -4,10 +4,11 @@ import { AbiFunction } from "abitype";
 import { parseAbiItem } from "viem";
 import { AddressInput, CustomContractWriteForm, InputBase } from "~~/components/scaffold-eth";
 import { RecoveryTx } from "~~/types/business";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 interface ICustomFlowProps {
   hackedAddress: string;
-  addAsset: (asset: RecoveryTx) => void;
+  addAsset: (asset: IWrappedRecoveryTx) => void;
 }
 export const CustomFlow = ({ hackedAddress, addAsset }: ICustomFlowProps) => {
   const [customContractAddress, setCustomContractAddress] = useState<string>("");

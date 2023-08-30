@@ -6,11 +6,12 @@ import { RecoveryTx } from "~~/types/business";
 
 interface IAssetProps {
   onClick: () => void;
+  image?:string;
   isSelected: boolean;
   tx?: RecoveryTx;
   isLoading: boolean;
 }
-export const AutoDetectedAssetItem = ({ onClick, isSelected, tx, isLoading }: IAssetProps) => {
+export const AutoDetectedAssetItem = ({ onClick, isSelected, tx, isLoading, image }: IAssetProps) => {
   const getSubtitleTitle = () => {
     if (!tx) {
       return "";
@@ -57,7 +58,7 @@ export const AutoDetectedAssetItem = ({ onClick, isSelected, tx, isLoading }: IA
       className={`${isSelected ? "bg-base-200" : ""} ${styles.assetItem}  ${isLoading ? styles.loading : ""}`}
     >
       <div className={`${styles.logoContainer}`}>
-        <Image className={styles.logo} src={LogoSvg} alt="" />
+        <Image className={styles.logo}   width={60} height={60} src={image ?? LogoSvg} alt="" />
       </div>
       <div className={`${styles.data}`}>
         <h3>{getTitle()}</h3>
