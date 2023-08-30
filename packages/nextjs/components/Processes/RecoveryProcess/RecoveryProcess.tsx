@@ -182,7 +182,7 @@ export const RecoveryProcess = ({
       </CustomPortal>
     );
   }
-  if (recoveryStatus !== RecoveryProcessStatus.DONATE) {
+  if (recoveryStatus === RecoveryProcessStatus.DONATE) {
     return (
       <CustomPortal
         title={"Support Our Mission"}
