@@ -6,6 +6,8 @@ import { InputBase } from "~~/components/scaffold-eth";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import ClockSvg from "~~/public/assets/flashbotRecovery/clock.svg";
 import LogoSvg from "~~/public/assets/flashbotRecovery/logo.svg";
+import SafeWalletSvg from "~~/public/assets/flashbotRecovery/safe.svg";
+import HackedWalletSvg from "~~/public/assets/flashbotRecovery/hacked.svg";
 import SuccessSvg from "~~/public/assets/flashbotRecovery/success.svg";
 import TelegramSvg from "~~/public/assets/flashbotRecovery/telegram.svg";
 import TipsSvg from "~~/public/assets/flashbotRecovery/tips.svg";
@@ -76,7 +78,7 @@ export const RecoveryProcess = ({
           disabled: connectedAddress !== safeAddress,
           action: () => startProcess(),
         }}
-        image={LogoSvg}
+        image={SafeWalletSvg}
       />
     );
   }
@@ -115,7 +117,7 @@ export const RecoveryProcess = ({
           disabled: connectedAddress !== hackedAddress,
           action: () => startSigning(),
         }}
-        image={LogoSvg}
+        image={HackedWalletSvg}
       />
     );
   }
