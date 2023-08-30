@@ -42,6 +42,10 @@ const Home: NextPage = () => {
     });
   };
   const getActiveStep = () => {
+    if(processStatus === RecoveryProcessStatus.SUCCESS || processStatus === RecoveryProcessStatus.DONATE){
+      return BundlingSteps.SIGN_RECOVERY_TXS;
+    }
+    
     if (!!isOnBasket) {
       return BundlingSteps.ASSET_SELECTION;
     }
