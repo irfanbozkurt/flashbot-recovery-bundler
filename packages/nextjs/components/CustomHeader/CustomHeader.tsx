@@ -15,7 +15,7 @@ export const CustomHeader = ({ isVisible }: IProps) => {
     <div className={styles.header}>
       <div className={styles.logoContainer}>
         <Image className={styles.logo} src={LogoSvg} alt="" />
-        Recovery Flashbot
+        Hacked Wallet Recovery
       </div>
     </div>
   );
