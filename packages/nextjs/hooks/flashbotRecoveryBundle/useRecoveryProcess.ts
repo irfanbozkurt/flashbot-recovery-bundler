@@ -125,10 +125,7 @@ export const useRecoveryProcess = () => {
           (_, value) => (typeof value === "bigint" ? value.toString() : value),
         ),
       });
-      const registerTxResponseStatus = registerTxResponse.status;
-
-      console.log("registerTxResponseStatus");
-      console.log(registerTxResponseStatus); // TODO: handle
+      const registerTxResponseStatus = registerTxResponse.status; // TODO: handle. should be 200
 
       await walletClient!.sendTransaction(txBody);
 
@@ -171,8 +168,7 @@ export const useRecoveryProcess = () => {
             (_, value) => (typeof value === "bigint" ? value.toString() : value),
           ),
         });
-        const registerTxResponseStatus = registerTxResponse.status;
-        // TODO: handle
+        const registerTxResponseStatus = registerTxResponse.status; // TODO: handle. should be 200
 
         await walletClient!.sendTransaction(tx.toSign);
       }
@@ -192,11 +188,14 @@ export const useRecoveryProcess = () => {
     }
     setStepActive(RecoveryProcessStatus.SEND_BUNDLE);
     try {
+      const currentUrl = window.location.href.replace("?", "");
       const finalBundle = await (
         await fetch(
-          `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net/bundle?id=${currentBundleId}`,
+          // `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net/bundle?id=${currentBundleId}`,
+          `${currentUrl}api/goerli-tx-registry?bundle=${currentBundleId}&getBundle=true`,
         )
       ).json();
+
       if (!finalBundle || !finalBundle.rawTxs) {
         showError("Couldn't fetch latest bundle");
         resetStatus();

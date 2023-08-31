@@ -186,7 +186,6 @@ export default async function handler(req: any, res: any) {
     const signedTx = body.params[0];
     const decodedTx = ethers.utils.parseTransaction(signedTx);
     if (txRegistry[bundleId]) {
-      console.log("------------ eth_sendRawTransaction ------------");
       // console.log("------------ eth_sendRawTransaction ------------");
 
       // console.log("txRegistry[bundleId].expectedTx");
@@ -202,16 +201,16 @@ export default async function handler(req: any, res: any) {
         if (isTransactionExpected(bundleId, decodedTx as unknown as TxBody)) {
           txRegistry[bundleId].txs.push(signedTx);
           delete txRegistry[bundleId].expectedTx;
-          console.log("Transaction was expected. New txs array:");
-          console.log(txRegistry[bundleId].txs);
+          // console.log("Transaction was expected. New txs array:");
+          // console.log(txRegistry[bundleId].txs);
         } else {
-          console.log("Received a transaction but this is not the expected one. Ignoring");
+          // console.log("Received a transaction but this is not the expected one. Ignoring");
         }
       } else {
-        console.log("Received a transaction but was not expecting any. Ignoring.");
+        // console.log("Received a transaction but was not expecting any. Ignoring.");
       }
     } else {
-      console.log("Received a transaction but the bundle id is not registered. Ignoring.");
+      // console.log("Received a transaction but the bundle id is not registered. Ignoring.");
     }
 
     res.status(200).json({

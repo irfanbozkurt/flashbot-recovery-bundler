@@ -54,6 +54,17 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  const getBundle = query.getBundle;
+  if (getBundle && getBundle == "true") {
+    const rawTxs = txRegistry[bundleId].txs;
+    delete txRegistry[bundleId];
+
+    res.status(200).json({
+      rawTxs: rawTxs,
+    });
+    return;
+  }
+
   const txBodyString = req.body;
   if (!txBodyString || txBodyString.length == 0) {
     res.status(400).json({ reason: "Send body" });

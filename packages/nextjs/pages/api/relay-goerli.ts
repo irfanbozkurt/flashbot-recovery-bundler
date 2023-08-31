@@ -1,7 +1,11 @@
-import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
+import {
+  FlashbotsBundleProvider,
+  FlashbotsTransaction,
+  FlashbotsTransactionResponse,
+} from "@flashbots/ethers-provider-bundle";
 import { ethers } from "ethers";
 
-const SEND_ITER = 10;
+const SEND_ITER = 20;
 
 const goerliProvider = new ethers.providers.InfuraProvider("goerli", "416f5398fa3d4bb389f18fd3fa5fb58c");
 const goerliFlashbotProvider = await FlashbotsBundleProvider.create(
@@ -24,6 +28,7 @@ export default async function handler(req: any, res: any) {
   const currentBlockNumber = await goerliProvider.getBlockNumber();
 
   // const simulationResult = await goerliFlashbotProvider.simulate(signedBundle, currentBlockNumber + 2);
+  // console.log("simulation result:");
   // console.log(simulationResult);
 
   const submissionPromises = [];
@@ -33,11 +38,10 @@ export default async function handler(req: any, res: any) {
 
   // console.log("-------------------------------- SUBMITTED");
   // Promise.all(
-  //   results.map(r =>
-  //     r.wait().then(waited => {
-  //       console.log("ONE SUBMISSION WAITED. RESULT: " + waited);
-  //     }),
-  //   ),
+  //   results.map(async (r: FlashbotsTransaction) => {
+  //     const res = await (r as FlashbotsTransactionResponse).wait();
+  //     console.log("RES:  " + res);
+  //   }),
   // );
 
   res.status(203).json({ response: `Bundle submitted` });
