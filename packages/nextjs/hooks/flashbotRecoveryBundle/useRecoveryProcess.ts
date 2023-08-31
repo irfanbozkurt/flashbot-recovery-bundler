@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useShowError } from "./useShowError";
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { BigNumber, ethers } from "ethers";
 import { useInterval, useLocalStorage } from "usehooks-ts";
@@ -7,7 +8,6 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { RecoveryTx } from "~~/types/business";
 import { RecoveryProcessStatus } from "~~/types/enums";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { useShowError } from "./useShowError";
 
 interface IStartProcessPops {
   safeAddress: string;
@@ -15,7 +15,6 @@ interface IStartProcessPops {
   totalGas: BigNumber;
   hackedAddress: string;
   transactions: RecoveryTx[];
-  currentBundleId: string;
 }
 
 const BLOCKS_IN_THE_FUTURE: { [i: number]: number } = {
@@ -32,7 +31,7 @@ export const useRecoveryProcess = () => {
   const [sentTxHash, setSentTxHash] = useLocalStorage<string>("sentTxHash", "");
   const [sentBlock, setSentBlock] = useLocalStorage<number>("sentBlock", 0);
   const [blockCountdown, setBlockCountdown] = useLocalStorage<number>("blockCountdown", 0);
-  const {showError} = useShowError();
+  const { showError } = useShowError();
 
   const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.INITIAL);
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
@@ -55,7 +54,6 @@ export const useRecoveryProcess = () => {
     })();
   }, [targetNetwork.id]);
 
-  
   useInterval(async () => {
     const isNotAbleToListenBundle = stepActive != RecoveryProcessStatus.LISTEN_BUNDLE || !sentTxHash || sentBlock == 0;
     try {
@@ -110,12 +108,35 @@ export const useRecoveryProcess = () => {
     return newBundleUuid;
   };
 
-  const payTheGas = async (totalGas: BigNumber, hackedAddress: string) => {
-    await walletClient!.sendTransaction({
-      to: hackedAddress as `0x${string}`,
-      value: BigInt(totalGas.toString()),
-    });
-    setGasCovered(true);
+  const payTheGas = async (totalGas: BigNumber, hackedAddress: string, bundleUuid: string) => {
+    // First let the backend know you'll send a transaction
+    const currentUrl = window.location.href.replace("?", "");
+    try {
+      const txBody = {
+        to: hackedAddress as `0x${string}`,
+        value: BigInt(totalGas.toString()),
+      };
+
+      const registerTxResponse = await fetch(`${currentUrl}api/goerli-tx-registry?bundle=${bundleUuid}`, {
+        method: "POST",
+        body: JSON.stringify(
+          // Work around "don't know how to serialize bigint"
+          txBody,
+          (_, value) => (typeof value === "bigint" ? value.toString() : value),
+        ),
+      });
+      const registerTxResponseStatus = registerTxResponse.status;
+
+      console.log("registerTxResponseStatus");
+      console.log(registerTxResponseStatus); // TODO: handle
+
+      await walletClient!.sendTransaction(txBody);
+
+      setGasCovered(true);
+    } catch (e) {
+      console.error(e);
+      // TODO
+    }
   };
 
   const signRecoveryTransactions = async (
@@ -137,8 +158,22 @@ export const useRecoveryProcess = () => {
     }
     setStepActive(RecoveryProcessStatus.SIGN_RECOVERY_TXS);
     ////////// Sign the transactions in the basket one after another
+    const currentUrl = window.location.href.replace("?", "");
     try {
       for (const tx of transactions) {
+        const txBody = tx.toSign;
+
+        const registerTxResponse = await fetch(`${currentUrl}api/goerli-tx-registry?bundle=${currentBundleId}`, {
+          method: "POST",
+          body: JSON.stringify(
+            // Work around "don't know how to serialize bigint"
+            txBody,
+            (_, value) => (typeof value === "bigint" ? value.toString() : value),
+          ),
+        });
+        const registerTxResponseStatus = registerTxResponse.status;
+        // TODO: handle
+
         await walletClient!.sendTransaction(tx.toSign);
       }
       setGasCovered(false);
@@ -175,7 +210,8 @@ export const useRecoveryProcess = () => {
         setSentBlock(parseInt((await publicClient.getBlockNumber()).toString()));
 
         const currentUrl = window.location.href.replace("?", "");
-        const response = await fetch(currentUrl + `api/relay${targetNetwork.network == "goerli" ? "-goerli" : ""}`, {
+
+        const response = await fetch(`${currentUrl}api/relay${targetNetwork.network == "goerli" ? "-goerli" : ""}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -207,7 +243,6 @@ export const useRecoveryProcess = () => {
     safeAddress,
     modifyBundleId,
     totalGas,
-    currentBundleId,
     hackedAddress,
     transactions,
   }: IStartProcessPops) => {
@@ -221,12 +256,14 @@ export const useRecoveryProcess = () => {
       modifyBundleId(bundleId);
       setStepActive(RecoveryProcessStatus.INCREASE_PRIORITY_FEE);
       // ////////// Cover the envisioned total gas fee from safe account
-      await payTheGas(totalGas, hackedAddress);
-      signRecoveryTransactions(hackedAddress, transactions, currentBundleId, true);
+      await payTheGas(totalGas, hackedAddress, bundleId);
+      signRecoveryTransactions(hackedAddress, transactions, bundleId, true);
       return;
     } catch (e) {
       resetStatus();
-      showError(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
+      showError(
+        `Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`,
+      );
     }
   };
 
@@ -235,6 +272,8 @@ export const useRecoveryProcess = () => {
       console.error("MetaMask Ethereum provider is not available");
       return;
     }
+
+    const currentUrl = window.location.href.replace("?", "");
 
     try {
       await window.ethereum.request({
@@ -249,7 +288,8 @@ export const useRecoveryProcess = () => {
               decimals: 18,
             },
             rpcUrls: [
-              `https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
+              //`https://rpc${targetNetwork.network == "goerli" ? "-goerli" : ""}.flashbots.net?bundle=${bundleUuid}`,
+              `${currentUrl}/api/rpc-goerli?bundle=${bundleUuid}`,
             ],
             blockExplorerUrls: [`https://${targetNetwork.network == "goerli" ? "goerli." : ""}etherscan.io`],
           },
@@ -261,8 +301,8 @@ export const useRecoveryProcess = () => {
   };
 
   const showTipsModal = () => {
-    setStepActive(RecoveryProcessStatus.DONATE)
-  }
+    setStepActive(RecoveryProcessStatus.DONATE);
+  };
 
   return {
     data: stepActive,
@@ -272,6 +312,6 @@ export const useRecoveryProcess = () => {
     startRecoveryProcess,
     signRecoveryTransactions,
     resetStatus,
-    showTipsModal
+    showTipsModal,
   };
 };
