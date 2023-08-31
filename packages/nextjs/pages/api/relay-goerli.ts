@@ -11,13 +11,13 @@ const goerliFlashbotProvider = await FlashbotsBundleProvider.create(
   "goerli",
 );
 
-export default async function handler(req, res) {
+export default async function handler(req: any, res: any) {
   const body = req.body;
   if (!body || !body.txs || body.txs.length == 0) {
     res.status(400).json({ reason: "Bad bundle" });
   }
 
-  const reformattedBundle = body.txs.map(signedTx => {
+  const reformattedBundle = body.txs.map((signedTx: any) => {
     return { signedTransaction: signedTx };
   });
   const signedBundle = await goerliFlashbotProvider.signBundle(reformattedBundle);
