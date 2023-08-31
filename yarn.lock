@@ -2929,7 +2929,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:^1.0.0":
+"@noble/curves@npm:1.1.0, @noble/curves@npm:^1.0.0":
   version: 1.1.0
   resolution: "@noble/curves@npm:1.1.0"
   dependencies:
@@ -3713,7 +3713,7 @@ __metadata:
     usehooks-ts: ^2.7.2
     uuidv4: ^6.2.13
     vercel: ^28.15.1
-    viem: ^1.2.1
+    viem: ^1.9.3
     wagmi: ^1.3.2
     zustand: ^4.1.2
   languageName: unknown
@@ -4644,6 +4644,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: b4c9b8ad209620c9b21e78314ce4ff07515c0cadab9af101c1651e7bfb992d7fd933bd8b9c99d110738fd6db523ed15f82f29f50b45510288da72e964dedb1a3
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:^8.5.4":
+  version: 8.5.5
+  resolution: "@types/ws@npm:8.5.5"
+  dependencies:
+    "@types/node": "*"
+  checksum: d00bf8070e6938e3ccf933010921c6ce78ac3606696ce37a393b27a9a603f7bd93ea64f3c5fa295a2f743575ba9c9a9fdb904af0f5fe2229bf2adf0630386e4a
   languageName: node
   linkType: hard
 
@@ -5798,6 +5807,21 @@ __metadata:
     zod:
       optional: true
   checksum: 4351466808969bcc73e5c535c3d96bb687ee2be0bccd48eba024c47e6cc248f0c8bd368f9e42dab35d39923e63b1349ade470f72812de27127968caf1a1426c9
+  languageName: node
+  linkType: hard
+
+"abitype@npm:0.9.3":
+  version: 0.9.3
+  resolution: "abitype@npm:0.9.3"
+  peerDependencies:
+    typescript: ">=5.0.4"
+    zod: ^3 >=3.19.1
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+    zod:
+      optional: true
+  checksum: f97c5a118180563b9ed8b97da492a82d3ce53dcd7d96c87764e90dbe84c04ae72dd5703d1ed5a54601033ab1772b8a235a1b5aadaf7aad6c4b5fdad7fd3a69a7
   languageName: node
   linkType: hard
 
@@ -18612,7 +18636,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^1.0.0, viem@npm:^1.2.1":
+"viem@npm:^1.0.0":
   version: 1.3.0
   resolution: "viem@npm:1.3.0"
   dependencies:
@@ -18631,6 +18655,28 @@ __metadata:
     typescript:
       optional: true
   checksum: 89361c5bb15c505e5ca20bbb33badd0d520ba22a0f1949f02d9327d29ca35a56e9f13d218399561dbbddbcda9197ae7c7cef1d3b8dedc1e3e94e1ed28aabfe08
+  languageName: node
+  linkType: hard
+
+"viem@npm:^1.9.3":
+  version: 1.9.3
+  resolution: "viem@npm:1.9.3"
+  dependencies:
+    "@adraffy/ens-normalize": 1.9.0
+    "@noble/curves": 1.1.0
+    "@noble/hashes": 1.3.0
+    "@scure/bip32": 1.3.0
+    "@scure/bip39": 1.2.0
+    "@types/ws": ^8.5.4
+    abitype: 0.9.3
+    isomorphic-ws: 5.0.0
+    ws: 8.12.0
+  peerDependencies:
+    typescript: ">=5.0.4"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: ad7aa84853088ce22232ec31a571dff80165867bda7ea87f08da1688f5e58a8d5140c8369dd45dbf020eddcb1be7fc7da9c2a71fea3eb00b8ada7115d955ba16
   languageName: node
   linkType: hard
 

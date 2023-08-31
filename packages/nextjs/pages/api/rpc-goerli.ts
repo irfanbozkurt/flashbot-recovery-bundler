@@ -43,9 +43,6 @@ export default async function handler(req: any, res: any) {
   if (body.method == "eth_gasPrice") {
     try {
       const estimation = await tempProvider.getGasPrice();
-      console.log("gasPrice request ---------------------------");
-      console.log(estimation);
-      console.log(estimation._hex);
       res.status(200).json({
         id: body.id,
         result: estimation._hex,
@@ -64,9 +61,6 @@ export default async function handler(req: any, res: any) {
   if (body.method == "eth_estimateGas") {
     try {
       const estimation = await tempProvider.estimateGas(body.params[0]);
-      console.log("estimation request");
-      console.log(estimation);
-      console.log(estimation._hex);
       res.status(200).json({
         id: body.id,
         result: estimation._hex,
@@ -148,7 +142,7 @@ export default async function handler(req: any, res: any) {
       });
       res.status(200).json({
         id: body.id,
-        result: resultStringified,
+        result: JSON.parse(resultStringified),
         jsonrpc: "2.0",
       });
     } catch (e) {
