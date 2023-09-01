@@ -53,7 +53,7 @@ export const ERC20Form = ({ hackedAddress, safeAddress, addAsset, close }: IToke
       info: "changeme",
       symbol: "changeme",
       amount: balance,
-      toSign: {
+      toEstimate: {
         from: hackedAddress as `0x${string}`,
         to: contractAddress as `0x${string}`,
         data: erc20Interface.encodeFunctionData("transfer", [safeAddress, BigNumber.from(balance)]) as `0x${string}`,

@@ -233,7 +233,7 @@ export const useAutodetectAssets = () => {
             info: `ERC20 - ${tokenSymbol != "???" ? `${tokenSymbol}` : `${erc20contract}`}`,
             symbol: tokenSymbol,
             amount: erc20balance,
-            toSign: {
+            toEstimate: {
               from: hackedAddress as `0x${string}`,
               to: erc20contract as `0x${string}`,
               data: erc20Interface.encodeFunctionData("transfer", [
@@ -267,7 +267,7 @@ export const useAutodetectAssets = () => {
                 info: `ERC721 - ${tokenSymbol != "???" ? `${tokenSymbol}` : `${erc721contract}`}`,
                 symbol: tokenSymbol,
                 tokenId: parseInt(tokenId).toString(),
-                toSign: {
+                toEstimate: {
                   from: hackedAddress as `0x${string}`,
                   to: erc721contract as `0x${string}`,
                   data: erc721Interface.encodeFunctionData("transferFrom", [
@@ -310,7 +310,7 @@ export const useAutodetectAssets = () => {
             uri: "changeme",
             tokenIds: tokenIds,
             amounts: balances,
-            toSign: {
+            toEstimate: {
               from: hackedAddress as `0x${string}`,
               to: erc1155contract as `0x${string}`,
               data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [
