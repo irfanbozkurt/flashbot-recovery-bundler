@@ -60,7 +60,7 @@ export const ERC1155Form = ({ hackedAddress, safeAddress, addAsset, close }: ITo
         uri: "changeme",
         tokenIds: erc1155TokenIds,
         amounts: erc1155TokenBalances,
-        toSign: {
+        toEstimate: {
           from: hackedAddress as `0x${string}`,
           to: contractAddress as `0x${string}`,
           data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [

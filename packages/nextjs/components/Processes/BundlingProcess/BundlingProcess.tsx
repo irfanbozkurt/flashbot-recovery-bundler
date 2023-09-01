@@ -53,12 +53,14 @@ export const BundlingProcess = ({
       setUnsignedTxs(txsToAdd);
       setIsOnBasket(false);
     },
-    fromBundlingToAssetSelection: (clearUnsignedTxs: boolean = false) => {
+    fromBundlingToAssetSelection: (clearUnsignedTxs = false) => {
       let selectedIndices: number[] = [];
       if (clearUnsignedTxs) {
         setUnsignedTxs([]);
       } else {
-        selectedIndices = unsignedTxs.map(tx => accountAssets.findIndex(asset => asset.tx.toSign.data == tx.toSign.data));
+        selectedIndices = unsignedTxs.map(tx =>
+          accountAssets.findIndex(asset => asset.toEstimate.data == tx.toEstimate.data),
+        );
       }
       setSelectedAssetIndices(selectedIndices);
       setIsOnBasket(true);

@@ -1,15 +1,23 @@
 export type RecoverableAssetTypes = "erc20" | "erc721" | "erc1155" | "custom";
 
-export interface CoreTxToSign {
+export interface CoreTxToEstimate {
   from: `0x${string}`;
   to: `0x${string}`;
   data: `0x${string}`;
 }
 
+export interface CoreTxToSign extends CoreTxToEstimate {
+  type?: "eip1559";
+  maxFeePerGas?: string | bigint;
+  maxPriorityFeePerGas?: string | bigint;
+  gas?: string | bigint;
+}
+
 export interface ExtendedUnsignedTx {
   type: RecoverableAssetTypes;
   info: string;
-  toSign: CoreTxToSign;
+  toEstimate: CoreTxToEstimate;
+  toSign?: CoreTxToSign;
 }
 
 export interface CustomTx extends ExtendedUnsignedTx {}

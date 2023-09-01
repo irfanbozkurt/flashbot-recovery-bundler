@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useShowError } from "./useShowError";
 import { InfuraProvider } from "@ethersproject/providers";
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
@@ -46,11 +46,11 @@ export const useRecoveryProcess = () => {
   useEffect(() => {
     (async () => {
       if (!targetNetwork || !targetNetwork.blockExplorers) return;
-      const provider = new ethers.providers.InfuraProvider(targetNetwork.id);
-      setInfuraProvider(provider);
+      const infuraProvider = new ethers.providers.InfuraProvider(targetNetwork.id);
+      setInfuraProvider(infuraProvider);
       setFlashbotsProvider(
         await FlashbotsBundleProvider.create(
-          provider,
+          infuraProvider,
           flashbotSigner,
           FLASHBOTS_RELAY_ENDPOINT,
           targetNetwork.network == "goerli" ? "goerli" : undefined,
@@ -118,9 +118,9 @@ export const useRecoveryProcess = () => {
     if (block) {
       const maxBaseFeeInFutureBlock = FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(
         block.baseFeePerGas as BigNumber,
-        3,
+        10,
       ).toString();
-      const priorityFee = BigNumber.from(10).pow(9).toString();
+      const priorityFee = BigNumber.from(10).pow(10).toString(); // 10 Gwei
       return { maxBaseFeeInFutureBlock, priorityFee };
     }
     return { maxBaseFeeInFutureBlock: "0", priorityFee: "0" };
@@ -128,7 +128,6 @@ export const useRecoveryProcess = () => {
 
   const payTheGas = async (totalGas: BigNumber, hackedAddress: string) => {
     const { maxBaseFeeInFutureBlock, priorityFee } = await getEstimatedTxFees();
-    console.log("gas fees", maxBaseFeeInFutureBlock, priorityFee);
     await walletClient!.sendTransaction({
       to: hackedAddress as `0x${string}`,
       value: BigInt(totalGas.toString()),
@@ -161,7 +160,21 @@ export const useRecoveryProcess = () => {
     ////////// Sign the transactions in the basket one after another
     try {
       for (const tx of transactions) {
-        await walletClient!.sendTransaction(tx.toSign);
+        if (tx.toSign) {
+          // Numbers are stored as strings so we need to convert to BigInts
+          const { to, from, data, type, maxFeePerGas, maxPriorityFeePerGas, gas } = tx.toSign;
+          const readyToSignTx = {
+            to,
+            from,
+            data,
+            type,
+            maxFeePerGas: BigInt(maxFeePerGas as string),
+            maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas as string),
+            gas: BigInt(gas as string),
+          };
+          console.log(readyToSignTx);
+          await walletClient!.sendTransaction(readyToSignTx);
+        }
       }
       setGasCovered(false);
       await sendBundle(currentBundleId);

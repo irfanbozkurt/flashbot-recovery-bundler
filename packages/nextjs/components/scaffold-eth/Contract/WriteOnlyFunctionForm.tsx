@@ -90,7 +90,7 @@ export const CustomContractWriteForm = ({
                 const customTx: CustomTx = {
                   type: "custom",
                   info: `Custom call (${abiFunction.name}) to ${contractAddress}`,
-                  toSign: {
+                  toEstimate: {
                     from: hackedAddress,
                     to: contractAddress,
                     data: new ethers.utils.Interface([fragment]).encodeFunctionData(

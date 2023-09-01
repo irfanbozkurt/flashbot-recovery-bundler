@@ -47,7 +47,7 @@ export const ERC721Form = ({ hackedAddress, safeAddress, addAsset, close }: ITok
       info: `NFT recovery for tokenId ${tokenId}`,
       symbol: "changeme",
       tokenId: tokenId,
-      toSign: {
+      toEstimate: {
         from: hackedAddress as `0x${string}`,
         to: contractAddress as `0x${string}`,
         data: erc721Interface.encodeFunctionData("transferFrom", [

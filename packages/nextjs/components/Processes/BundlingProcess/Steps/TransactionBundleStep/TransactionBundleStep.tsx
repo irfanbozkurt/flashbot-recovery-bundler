@@ -38,7 +38,7 @@ export const TransactionBundleStep = ({
     if (transactions.length == 0) {
       return;
     }
-    estimateTotalGasPrice(transactions, removeUnsignedTx).then(setTotalGasEstimate);
+    estimateTotalGasPrice(transactions, removeUnsignedTx, modifyTransactions).then(setTotalGasEstimate);
   }, [transactions.length]);
 
   useInterval(() => {
@@ -46,7 +46,7 @@ export const TransactionBundleStep = ({
       return;
     }
     const updateTotalGasEstimate = async () => {
-      setTotalGasEstimate(await estimateTotalGasPrice(transactions, removeUnsignedTx));
+      setTotalGasEstimate(await estimateTotalGasPrice(transactions, removeUnsignedTx, modifyTransactions));
     };
     updateTotalGasEstimate();
   }, 5000);
