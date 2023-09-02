@@ -6,7 +6,7 @@ import { RecoveryTx } from "~~/types/business";
 
 interface IAssetProps {
   onClick: () => void;
-  image?:string;
+  image?: string;
   isSelected: boolean;
   tx?: RecoveryTx;
   isLoading: boolean;
@@ -58,7 +58,7 @@ export const AutoDetectedAssetItem = ({ onClick, isSelected, tx, isLoading, imag
       className={`${isSelected ? "bg-base-200" : ""} ${styles.assetItem}  ${isLoading ? styles.loading : ""}`}
     >
       <div className={`${styles.logoContainer}`}>
-        <Image className={styles.logo}   width={60} height={60} src={image ?? LogoSvg} alt="" />
+        <Image className={styles.logo} width={60} height={60} src={image ?? LogoSvg} alt="" />
       </div>
       <div className={`${styles.data}`}>
         <h3>{getTitle()}</h3>

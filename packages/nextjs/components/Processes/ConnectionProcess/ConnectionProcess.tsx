@@ -30,9 +30,14 @@ export const ConnectionProcess = ({ isVisible, safeAddress, connectedAddress, se
           className={styles.container}
         >
           <h1 className={styles.title}>Let's recover your hacked assets</h1>
-          <Image className={styles.illustration} src={IllustrationSvg} alt="An ethereum icon with nfts and tokens around" />
+          <Image
+            className={styles.illustration}
+            src={IllustrationSvg}
+            alt="An ethereum icon with nfts and tokens around"
+          />
           <h2 className={`${styles.text} text-secondary-content`}>
-          Follow the steps and reclaim your assets with a "Secure Wallet" under your control. Connect the wallet to begin the process.
+            Follow the steps and reclaim your assets with a "Secure Wallet" under your control. Connect the wallet to
+            begin the process.
           </h2>
           <div className={styles.buttonContainer}>
             <RainbowKitCustomConnectButton />

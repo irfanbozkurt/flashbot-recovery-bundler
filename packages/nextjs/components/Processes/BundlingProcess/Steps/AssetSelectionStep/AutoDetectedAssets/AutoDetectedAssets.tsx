@@ -1,7 +1,5 @@
-import { Dispatch } from "react";
 import styles from "./autoDetectedAssets.module.css";
 import { AutoDetectedAssetItem } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/AutoDetectedAssets/AutoDetectedAssetItem";
-import { RecoveryTx } from "~~/types/business";
 import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 interface IProps {
@@ -11,10 +9,12 @@ interface IProps {
   selectAsset: (index: number) => void;
 }
 export const AutoDetectedAssets = ({ isLoading, selectedAssets, selectAsset, accountAssets }: IProps) => {
-  if(!isLoading && accountAssets.length === 0){
-    return  <div className={styles.assetList}>
+  if (!isLoading && accountAssets.length === 0) {
+    return (
+      <div className={styles.assetList}>
         <span className={`${styles.noAssets} text-secondary-content`}>We don't have detected any asset</span>
-    </div>
+      </div>
+    );
   }
   return (
     <div className={styles.assetList}>

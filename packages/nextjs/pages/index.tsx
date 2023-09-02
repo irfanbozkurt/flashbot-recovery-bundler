@@ -26,7 +26,13 @@ const Home: NextPage = () => {
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
   const { error, resetError } = useShowError();
 
-  const { data: processStatus, startRecoveryProcess, signRecoveryTransactions, blockCountdown, showTipsModal } = useRecoveryProcess();
+  const {
+    data: processStatus,
+    startRecoveryProcess,
+    signRecoveryTransactions,
+    blockCountdown,
+    showTipsModal,
+  } = useRecoveryProcess();
 
   const startSigning = () => {
     signRecoveryTransactions(hackedAddress, unsignedTxs, currentBundleId, false);
@@ -42,10 +48,10 @@ const Home: NextPage = () => {
     });
   };
   const getActiveStep = () => {
-    if(processStatus === RecoveryProcessStatus.SUCCESS || processStatus === RecoveryProcessStatus.DONATE){
+    if (processStatus === RecoveryProcessStatus.SUCCESS || processStatus === RecoveryProcessStatus.DONATE) {
       return BundlingSteps.SIGN_RECOVERY_TXS;
     }
-    
+
     if (!!isOnBasket) {
       return BundlingSteps.ASSET_SELECTION;
     }
@@ -61,7 +67,6 @@ const Home: NextPage = () => {
     return BundlingSteps.HACKED_ADDRESS_INPUT;
   };
 
-  
   const reload = () => {
     localStorage.clear();
     window.location.reload();

@@ -8,11 +8,10 @@ import { usePublicClient } from "wagmi";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { ITokenForm } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/ManualAssetSelection/BasicFlow/types";
 import { AddressInput, InputBase } from "~~/components/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import { ERC721Tx } from "~~/types/business";
 import { ERC721_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
-
 
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 
@@ -20,7 +19,7 @@ export const ERC721Form = ({ hackedAddress, safeAddress, addAsset, close }: ITok
   const [contractAddress, setContractAddress] = useState<string>("");
   const [tokenId, setTokenId] = useState<string>("");
   const publicClient = usePublicClient({ chainId: getTargetNetwork().id });
-  const {showError} = useShowError()
+  const { showError } = useShowError();
   const addErc721TxToBasket = async () => {
     if (!isAddress(contractAddress) || !tokenId) {
       showError("Provide a contract and a token ID");

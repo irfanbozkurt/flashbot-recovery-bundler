@@ -8,16 +8,16 @@ import { useContractRead } from "wagmi";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { ITokenForm } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/ManualAssetSelection/BasicFlow/types";
 import { AddressInput } from "~~/components/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import { ERC20Tx } from "~~/types/business";
 import { ERC20_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 
 const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
 
 export const ERC20Form = ({ hackedAddress, safeAddress, addAsset, close }: ITokenForm) => {
   const [contractAddress, setContractAddress] = useState<string>("");
-  const {showError} = useShowError()
+  const { showError } = useShowError();
   let erc20Balance: string = "NO INFO";
   try {
     let { data } = useContractRead({
@@ -36,7 +36,6 @@ export const ERC20Form = ({ hackedAddress, safeAddress, addAsset, close }: IToke
     // Most probably the contract address is not valid as user is
     // still typing, so ignore.
   }
-  
 
   const addErc20TxToBasket = (balance: string) => {
     if (!isAddress(contractAddress)) {

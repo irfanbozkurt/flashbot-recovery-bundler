@@ -12,7 +12,7 @@ interface IProps {
   onSubmit: (address: string) => void;
 }
 export const HackedAddressStep = ({ isVisible, safeAddress, onSubmit }: IProps) => {
-  const {showError} = useShowError();
+  const { showError } = useShowError();
   const [hackedAddress, setHackedAddressCore] = useState<string>("");
   const setHackedAddress = (hackedAddress: string) => {
     if (safeAddress == hackedAddress) {
@@ -22,7 +22,7 @@ export const HackedAddressStep = ({ isVisible, safeAddress, onSubmit }: IProps) 
     }
     setHackedAddressCore(hackedAddress);
   };
-  
+
   if (!isVisible) {
     return <></>;
   }

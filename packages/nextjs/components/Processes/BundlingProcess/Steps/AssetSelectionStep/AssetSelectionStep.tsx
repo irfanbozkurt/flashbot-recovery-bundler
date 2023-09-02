@@ -1,15 +1,14 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import Image from "next/image";
 import styles from "./assetSelectionStep.module.css";
 import { motion } from "framer-motion";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { AutoDetectedAssets } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/AutoDetectedAssets/AutoDetectedAssets";
 import { ManualAssetSelection } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/ManualAssetSelection/ManualAssetSelection";
 import { IWrappedRecoveryTx, useAutodetectAssets } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
-import { RecoveryTx } from "~~/types/business";
 import BackSvg from "~~/public/assets/flashbotRecovery/back.svg";
 import RefreshSvg from "~~/public/assets/flashbotRecovery/refresh.svg";
-
-import Image from "next/image";
+import { RecoveryTx } from "~~/types/business";
 
 interface IProps {
   isVisible: boolean;
@@ -33,7 +32,6 @@ export const AssetSelectionStep = ({
   hackedAddress,
   safeAddress,
 }: IProps) => {
-
   const [isAddingManually, setIsAddingManually] = useState(false);
   const { getAutodetectedAssets } = useAutodetectAssets();
   const [isLoading, setIsLoading] = useState(false);
@@ -100,9 +98,21 @@ export const AssetSelectionStep = ({
       />
 
       <div className="flex items-center justify-center">
-        <Image src={BackSvg} alt={""} style={{ marginRight: 400 }} className="h-5 w-5 absolute" onClick={onBackButton}  />
+        <Image
+          src={BackSvg}
+          alt={""}
+          style={{ marginRight: 400 }}
+          className="h-5 w-5 absolute"
+          onClick={onBackButton}
+        />
         <h2 className={`${styles.title}`}>Your assets</h2>
-        <Image src={RefreshSvg} alt={""} style={{ marginLeft: 400 }} className="h-5 w-5 absolute" onClick={reloadAssets}  />
+        <Image
+          src={RefreshSvg}
+          alt={""}
+          style={{ marginLeft: 400 }}
+          className="h-5 w-5 absolute"
+          onClick={reloadAssets}
+        />
       </div>
 
       <AutoDetectedAssets
