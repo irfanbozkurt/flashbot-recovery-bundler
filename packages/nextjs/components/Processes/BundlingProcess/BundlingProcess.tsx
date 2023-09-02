@@ -7,9 +7,9 @@ import { SideBar } from "~~/components/Processes/BundlingProcess/SideBar/SideBar
 import { AssetSelectionStep } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/AssetSelectionStep";
 import { HackedAddressStep } from "~~/components/Processes/BundlingProcess/Steps/HackedAddressStep/HackedAddressStep";
 import { TransactionBundleStep } from "~~/components/Processes/BundlingProcess/Steps/TransactionBundleStep/TransactionBundleStep";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 import { RecoveryTx } from "~~/types/business";
 import { BundlingSteps } from "~~/types/enums";
-import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 interface IProps {
   isVisible: boolean;
@@ -37,9 +37,11 @@ export const BundlingProcess = ({
   setUnsignedTxs,
   startRecovery,
 }: IProps) => {
-
   const [accountAssets, setAccountAssets] = useLocalStorage<IWrappedRecoveryTx[]>(`${hackedAddress}-accountAssets`, []);
-  const [selectedAssetIndices, setSelectedAssetIndices] = useLocalStorage<number[]>(`${hackedAddress}-selectedAssetIndices`, []);
+  const [selectedAssetIndices, setSelectedAssetIndices] = useLocalStorage<number[]>(
+    `${hackedAddress}-selectedAssetIndices`,
+    [],
+  );
 
   const stateTransitionFunctions = {
     fromHackedAddressInputToAssetSelection: setHackedAddress,
@@ -59,7 +61,7 @@ export const BundlingProcess = ({
         setUnsignedTxs([]);
       } else {
         selectedIndices = unsignedTxs.map(tx =>
-          accountAssets.findIndex(asset => asset.toEstimate.data == tx.toEstimate.data),
+          accountAssets.findIndex(asset => asset.tx.toEstimate.data == tx.toEstimate.data),
         );
       }
       setSelectedAssetIndices(selectedIndices);
@@ -72,7 +74,6 @@ export const BundlingProcess = ({
     return <></>;
   }
 
-  
   return (
     <motion.div className={styles.bundling} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <SideBar activeStep={activeStep} hackedAddress={hackedAddress} safeAddress={safeAddress} />
