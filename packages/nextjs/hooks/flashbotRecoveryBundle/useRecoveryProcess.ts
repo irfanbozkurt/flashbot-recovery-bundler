@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useShowError } from "./useShowError";
+import { InfuraProvider } from "@ethersproject/providers";
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { BigNumber, ethers } from "ethers";
 import { useInterval, useLocalStorage } from "usehooks-ts";
@@ -7,7 +9,6 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { RecoveryTx } from "~~/types/business";
 import { RecoveryProcessStatus } from "~~/types/enums";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { useShowError } from "./useShowError";
 
 interface IStartProcessPops {
   safeAddress: string;
@@ -28,11 +29,12 @@ const flashbotSigner = ethers.Wallet.createRandom();
 export const useRecoveryProcess = () => {
   const targetNetwork = getTargetNetwork();
   const [flashbotsProvider, setFlashbotsProvider] = useState<FlashbotsBundleProvider>();
+  const [infuraProvider, setInfuraProvider] = useState<InfuraProvider>();
   const [gasCovered, setGasCovered] = useState<boolean>(false);
   const [sentTxHash, setSentTxHash] = useLocalStorage<string>("sentTxHash", "");
   const [sentBlock, setSentBlock] = useLocalStorage<number>("sentBlock", 0);
   const [blockCountdown, setBlockCountdown] = useLocalStorage<number>("blockCountdown", 0);
-  const {showError} = useShowError();
+  const { showError } = useShowError();
 
   const [stepActive, setStepActive] = useState<RecoveryProcessStatus>(RecoveryProcessStatus.INITIAL);
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
@@ -44,9 +46,11 @@ export const useRecoveryProcess = () => {
   useEffect(() => {
     (async () => {
       if (!targetNetwork || !targetNetwork.blockExplorers) return;
+      const infuraProvider = new ethers.providers.InfuraProvider(targetNetwork.id);
+      setInfuraProvider(infuraProvider);
       setFlashbotsProvider(
         await FlashbotsBundleProvider.create(
-          new ethers.providers.InfuraProvider(targetNetwork.id),
+          infuraProvider,
           flashbotSigner,
           FLASHBOTS_RELAY_ENDPOINT,
           targetNetwork.network == "goerli" ? "goerli" : undefined,
@@ -55,7 +59,6 @@ export const useRecoveryProcess = () => {
     })();
   }, [targetNetwork.id]);
 
-  
   useInterval(async () => {
     const isNotAbleToListenBundle = stepActive != RecoveryProcessStatus.LISTEN_BUNDLE || !sentTxHash || sentBlock == 0;
     try {
@@ -110,10 +113,28 @@ export const useRecoveryProcess = () => {
     return newBundleUuid;
   };
 
+  const getEstimatedTxFees = async () => {
+    const block = await infuraProvider!.getBlock("latest");
+    if (block) {
+      const maxBaseFeeInFutureBlock = FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(
+        block.baseFeePerGas as BigNumber,
+        10,
+      ).toString();
+      const priorityFee = BigNumber.from(10).pow(10).toString(); // 10 Gwei
+      return { maxBaseFeeInFutureBlock, priorityFee };
+    }
+    return { maxBaseFeeInFutureBlock: "0", priorityFee: "0" };
+  };
+
   const payTheGas = async (totalGas: BigNumber, hackedAddress: string) => {
+    const { maxBaseFeeInFutureBlock, priorityFee } = await getEstimatedTxFees();
     await walletClient!.sendTransaction({
       to: hackedAddress as `0x${string}`,
       value: BigInt(totalGas.toString()),
+      type: "eip1559",
+      maxFeePerGas: BigInt(priorityFee) + BigInt(maxBaseFeeInFutureBlock),
+      maxPriorityFeePerGas: BigInt(priorityFee),
+      gas: 23000n,
     });
     setGasCovered(true);
   };
@@ -139,7 +160,21 @@ export const useRecoveryProcess = () => {
     ////////// Sign the transactions in the basket one after another
     try {
       for (const tx of transactions) {
-        await walletClient!.sendTransaction(tx.toSign);
+        if (tx.toSign) {
+          // Numbers are stored as strings so we need to convert to BigInts
+          const { to, from, data, type, maxFeePerGas, maxPriorityFeePerGas, gas } = tx.toSign;
+          const readyToSignTx = {
+            to,
+            from,
+            data,
+            type,
+            maxFeePerGas: BigInt(maxFeePerGas as string),
+            maxPriorityFeePerGas: BigInt(maxPriorityFeePerGas as string),
+            gas: BigInt(gas as string),
+          };
+          console.log(readyToSignTx);
+          await walletClient!.sendTransaction(readyToSignTx);
+        }
       }
       setGasCovered(false);
       await sendBundle(currentBundleId);
@@ -226,7 +261,9 @@ export const useRecoveryProcess = () => {
       return;
     } catch (e) {
       resetStatus();
-      showError(`Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`);
+      showError(
+        `Error while adding a custom RPC and signing the funding transaction with the safe account. Error: ${e}`,
+      );
     }
   };
 
@@ -261,8 +298,8 @@ export const useRecoveryProcess = () => {
   };
 
   const showTipsModal = () => {
-    setStepActive(RecoveryProcessStatus.DONATE)
-  }
+    setStepActive(RecoveryProcessStatus.DONATE);
+  };
 
   return {
     data: stepActive,
@@ -272,6 +309,6 @@ export const useRecoveryProcess = () => {
     startRecoveryProcess,
     signRecoveryTransactions,
     resetStatus,
-    showTipsModal
+    showTipsModal,
   };
 };

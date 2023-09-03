@@ -8,11 +8,10 @@ import { usePublicClient } from "wagmi";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { ITokenForm } from "~~/components/Processes/BundlingProcess/Steps/AssetSelectionStep/ManualAssetSelection/BasicFlow/types";
 import { AddressInput, InputBase } from "~~/components/scaffold-eth";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import { ERC1155Tx } from "~~/types/business";
 import { ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
-
 
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
 
@@ -20,7 +19,7 @@ export const ERC1155Form = ({ hackedAddress, safeAddress, addAsset, close }: ITo
   const [contractAddress, setContractAddress] = useState<string>("");
   const [tokenIds, setTokenIds] = useState<string>("");
   const publicClient = usePublicClient({ chainId: getTargetNetwork().id });
-  const {showError} = useShowError()
+  const { showError } = useShowError();
   const addErc1155TxToBasket = async () => {
     if (!isAddress(contractAddress) || !tokenIds) {
       showError("Provide an ERC1155 contract and token IDs");
@@ -60,7 +59,7 @@ export const ERC1155Form = ({ hackedAddress, safeAddress, addAsset, close }: ITo
         uri: "changeme",
         tokenIds: erc1155TokenIds,
         amounts: erc1155TokenBalances,
-        toSign: {
+        toEstimate: {
           from: hackedAddress as `0x${string}`,
           to: contractAddress as `0x${string}`,
           data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [

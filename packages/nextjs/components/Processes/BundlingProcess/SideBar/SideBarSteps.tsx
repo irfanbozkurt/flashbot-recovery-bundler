@@ -18,9 +18,7 @@ export const SideBarSteps = ({ activeStep }: ISideBar) => {
         index={BundlingSteps.ASSET_SELECTION}
         activeStep={activeStep}
         title={"Choose your assets"}
-        description={
-          "Choose the assets you wish to transfer from the list, or manually add any missing ones."
-        }
+        description={"Choose the assets you wish to transfer from the list, or manually add any missing ones."}
       />
       <SideBarStepInfo
         index={BundlingSteps.TX_BUNDLE}

@@ -8,12 +8,12 @@ import { useDarkMode } from "usehooks-ts";
 import { WagmiConfig } from "wagmi";
 import { Footer } from "~~/components/Footer";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { ErrorProvider } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import { useNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { useGlobalState } from "~~/services/store/store";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { appChains } from "~~/services/web3/wagmiConnectors";
 import "~~/styles/globals.css";
-import { ErrorProvider } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 
 const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
   const price = useNativeCurrencyPrice();

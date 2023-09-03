@@ -31,14 +31,13 @@ export const TransactionBundleStep = ({
   totalGasEstimate,
   setTotalGasEstimate,
 }: IProps) => {
-
   const { estimateTotalGasPrice } = useGasEstimation();
 
   useEffect(() => {
     if (transactions.length == 0) {
       return;
     }
-    estimateTotalGasPrice(transactions, removeUnsignedTx).then(setTotalGasEstimate);
+    estimateTotalGasPrice(transactions, removeUnsignedTx, modifyTransactions).then(setTotalGasEstimate);
   }, [transactions.length]);
 
   useInterval(() => {
@@ -46,7 +45,7 @@ export const TransactionBundleStep = ({
       return;
     }
     const updateTotalGasEstimate = async () => {
-      setTotalGasEstimate(await estimateTotalGasPrice(transactions, removeUnsignedTx));
+      setTotalGasEstimate(await estimateTotalGasPrice(transactions, removeUnsignedTx, modifyTransactions));
     };
     updateTotalGasEstimate();
   }, 5000);
@@ -70,29 +69,29 @@ export const TransactionBundleStep = ({
   if (!isVisible) {
     return <></>;
   }
-  
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.container}>
       <div className={styles.mainContent}>
-      <div className={styles.gasContainer}>
-        <span className={styles.gasValue}>{ethers.utils.formatEther(totalGasEstimate.toString())}</span>
-        <div className="ml-2"></div>
-        <Image height={20} width={20} src={GasSvg} alt="" />
-      </div>
-      <div className="m-4" />
-      <h2 className={styles.title}>Your transactions</h2>
-      <div className={styles.assetList}>
-        {transactions.map((item, i) => (
-          <TransactionItem key={i} onDelete={() => removeUnsignedTx(i)} tx={item} />
-        ))}
-      </div>
-      <span className={styles.clear} onClick={clear}>
-        Clear all
-      </span>
-      <div className="m-4" />
-      <CustomButton type="btn-accent" text={"Back to Assets"} onClick={onBack} />
-      <div className="m-2" />
-      <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit(totalGasEstimate)} />
+        <div className={styles.gasContainer}>
+          <span className={styles.gasValue}>{ethers.utils.formatEther(totalGasEstimate.toString())}</span>
+          <div className="ml-2"></div>
+          <Image height={20} width={20} src={GasSvg} alt="" />
+        </div>
+        <div className="m-4" />
+        <h2 className={styles.title}>Your transactions</h2>
+        <div className={styles.assetList}>
+          {transactions.map((item, i) => (
+            <TransactionItem key={i} onDelete={() => removeUnsignedTx(i)} tx={item} />
+          ))}
+        </div>
+        <span className={styles.clear} onClick={clear}>
+          Clear all
+        </span>
+        <div className="m-4" />
+        <CustomButton type="btn-accent" text={"Back to Assets"} onClick={onBack} />
+        <div className="m-2" />
+        <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit(totalGasEstimate)} />
       </div>
     </motion.div>
   );

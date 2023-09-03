@@ -6,7 +6,6 @@ import { ERC1155Form } from "./ERC1155Form";
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
-import { RecoveryTx } from "~~/types/business";
 import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
 
 enum ActiveAssetType {
