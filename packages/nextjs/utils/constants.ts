@@ -1,3 +1,5 @@
+export const DUMMY_ADDRESS = "0x23E86852dA9516441E27D5CE06faac360D34d5Ac"
+
 export const ERC721_ABI = [
   {
     constant: true,

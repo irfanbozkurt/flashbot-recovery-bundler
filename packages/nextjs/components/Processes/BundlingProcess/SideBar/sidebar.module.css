@@ -2,7 +2,7 @@
   max-width: 530px;
   display: flex;
   width: auto;
-
+  flex-direction: column;
   background-color: #243148;
   height: 100%;
 }
@@ -10,6 +10,7 @@
 .sidebarContent {
   margin-top: 56px;
   margin-left: 10px;
+  flex-grow: 1;
 }
 
 .logoContainer {
@@ -29,6 +30,7 @@
   margin-top: 48px;
   margin-right: 63px;
   position: relative;
+  flex-grow: 1;
 }
 .step {
   display: flex;
@@ -69,15 +71,18 @@
 
 .addresess {
   display: flex;
-  position: absolute;
   bottom: 0;
   width: 100%;
   border-radius: 12px;
   justify-content: space-around;
-  max-width: 380px;
-  width: 34%;
-  left: 96px;
-  bottom: 26px;
+  align-self: center;
+  width: 340px;
+  margin-left: 40px;
+  margin-bottom: 30px;
+}
+
+.addressContainer div span{
+  font-size: 12px;
 }
 
 .addressContainer {
