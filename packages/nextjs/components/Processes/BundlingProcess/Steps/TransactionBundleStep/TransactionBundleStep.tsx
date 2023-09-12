@@ -16,7 +16,7 @@ interface IProps {
   transactions: RecoveryTx[];
   onBack: () => void;
   modifyTransactions: Dispatch<SetStateAction<RecoveryTx[]>>;
-  onSubmit: (val: BigNumber) => void;
+  onSubmit: () => void;
   totalGasEstimate: BigNumber;
   setTotalGasEstimate: Dispatch<SetStateAction<BigNumber>>;
 }
@@ -91,7 +91,7 @@ export const TransactionBundleStep = ({
         <div className="m-4" />
         <CustomButton type="btn-accent" text={"Back to Assets"} onClick={onBack} />
         <div className="m-2" />
-        <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit(totalGasEstimate)} />
+        <CustomButton type="btn-primary" text={"Start Signing"} onClick={() => onSubmit()} />
       </div>
     </motion.div>
   );

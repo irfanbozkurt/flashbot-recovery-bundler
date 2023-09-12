@@ -9,18 +9,19 @@ import { CustomPortal } from "~~/components/CustomPortal/CustomPortal";
 import { MetaHeader } from "~~/components/MetaHeader";
 import { BundlingProcess } from "~~/components/Processes/BundlingProcess/BundlingProcess";
 import { ConnectionProcess } from "~~/components/Processes/ConnectionProcess/ConnectionProcess";
+import { HackedAddressProcess } from "~~/components/Processes/HackedAddressProcess/HackedAddressProcess";
 import { RecoveryProcess } from "~~/components/Processes/RecoveryProcess/RecoveryProcess";
 import { useRecoveryProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import ErrorSvg from "~~/public/assets/flashbotRecovery/error.svg";
 import { RecoveryTx } from "~~/types/business";
 import { BundlingSteps, RecoveryProcessStatus } from "~~/types/enums";
+import { DUMMY_ADDRESS } from "~~/utils/constants";
 
 const Home: NextPage = () => {
   const { isConnected: walletConnected, address: connectedAddress } = useAccount();
-  const [safeAddress, setSafeAddress] = useLocalStorage<string>("toAddress", "");
+  const [safeAddress, setSafeAddress] = useState(DUMMY_ADDRESS);
   const [hackedAddress, setHackedAddress] = useLocalStorage<string>("hackedAddress", "");
-  const [unsignedTxs, setUnsignedTxs] = useLocalStorage<RecoveryTx[]>("unsignedTxs", []);
   const [totalGasEstimate, setTotalGasEstimate] = useState<BigNumber>(BigNumber.from("0"));
   const [isOnBasket, setIsOnBasket] = useState(false);
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
@@ -32,14 +33,17 @@ const Home: NextPage = () => {
     signRecoveryTransactions,
     blockCountdown,
     showTipsModal,
+    unsignedTxs, setUnsignedTxs
   } = useRecoveryProcess();
 
   const startSigning = () => {
     signRecoveryTransactions(hackedAddress, unsignedTxs, currentBundleId, false);
   };
-  const startRecovery = () => {
+  const startRecovery = (safe?:string) => {
+    const accountToUse = safe ? safe :DUMMY_ADDRESS
+    setSafeAddress(accountToUse);
     startRecoveryProcess({
-      safeAddress,
+      safeAddress:accountToUse,
       modifyBundleId: setCurrentBundleId,
       totalGas: totalGasEstimate,
       hackedAddress,
@@ -64,7 +68,7 @@ const Home: NextPage = () => {
     if (hackedAddress !== "") {
       return BundlingSteps.ASSET_SELECTION;
     }
-    return BundlingSteps.HACKED_ADDRESS_INPUT;
+    return BundlingSteps._;
   };
 
   const reload = () => {
@@ -87,15 +91,13 @@ const Home: NextPage = () => {
           alignItems: "center",
         }}
       >
-        <ConnectionProcess
-          isVisible={!walletConnected}
-          safeAddress={safeAddress}
-          setSafeAddress={setSafeAddress}
-          connectedAddress={connectedAddress}
+        <HackedAddressProcess
+          isVisible={!hackedAddress}
+          onSubmit={newAddress => setHackedAddress(newAddress)}
         />
 
         <BundlingProcess
-          isVisible={walletConnected}
+          isVisible={!!hackedAddress}
           activeStep={getActiveStep()}
           hackedAddress={hackedAddress}
           safeAddress={safeAddress}
@@ -105,7 +107,7 @@ const Home: NextPage = () => {
           setUnsignedTxs={setUnsignedTxs}
           setIsOnBasket={setIsOnBasket}
           setTotalGasEstimate={setTotalGasEstimate}
-          startRecovery={startRecovery}
+          startRecovery={(add) => startRecovery(add)}
         />
 
         <RecoveryProcess

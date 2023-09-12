@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "./recoveryProcess.module.css";
+import { useAccount, useDisconnect } from "wagmi";
+import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { CustomPortal } from "~~/components/CustomPortal/CustomPortal";
-import { InputBase } from "~~/components/scaffold-eth";
+import { InputBase, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import ClockSvg from "~~/public/assets/flashbotRecovery/clock.svg";
 import HackedWalletSvg from "~~/public/assets/flashbotRecovery/hacked.svg";
@@ -14,13 +16,14 @@ import TipsSvg from "~~/public/assets/flashbotRecovery/tips.svg";
 import TwitterSvg from "~~/public/assets/flashbotRecovery/twitter.svg";
 import VideoSvg from "~~/public/assets/flashbotRecovery/video.svg";
 import { RecoveryProcessStatus } from "~~/types/enums";
+import { CustomConnectButton } from "~~/components/CustomConnectButton/CustomConnectButton";
 
 interface IProps {
   recoveryStatus: RecoveryProcessStatus;
   startSigning: () => void;
   finishProcess: () => void;
   showTipsModal: () => void;
-  startProcess: () => void;
+  startProcess: (arg: string) => void;
   connectedAddress: string | undefined;
   safeAddress: string;
   hackedAddress: string;
@@ -38,6 +41,7 @@ export const RecoveryProcess = ({
   safeAddress,
   hackedAddress,
 }: IProps) => {
+  const {address} = useAccount()
   const { showError } = useShowError();
   const [donationValue, setDonationValue] = useState<string>("");
 
@@ -66,20 +70,20 @@ export const RecoveryProcess = ({
     );
   }
 
-  if (recoveryStatus == RecoveryProcessStatus.NO_SAFE_ACCOUNT) {
+  if (
+    recoveryStatus == RecoveryProcessStatus.NO_SAFE_ACCOUNT ||
+    recoveryStatus == RecoveryProcessStatus.NO_CONNECTED_ACCOUNT
+  ) {
     return (
       <CustomPortal
-        title={"Switch to safe address"}
+        title={"Connect to a safe address"}
         description={
           "To ensure a secure asset transfer, switch to your safe wallet. This step guarantees the safe retrieval of your assets without any further risks."
         }
-        button={{
-          text: "Continue",
-          disabled: connectedAddress !== safeAddress,
-          action: () => startProcess(),
-        }}
         image={SafeWalletSvg}
-      />
+      >
+        <ConnectSafeStep hackedAddress={hackedAddress} startProcess={(add) =>startProcess(add)} />
+      </CustomPortal>
     );
   }
 
@@ -211,4 +215,29 @@ export const RecoveryProcess = ({
   }
 
   return <></>;
+};
+
+interface IConnectSafeStepProps {
+  startProcess: (arg: string) => void;
+  hackedAddress: string;
+}
+export const ConnectSafeStep = ({ hackedAddress, startProcess }: IConnectSafeStepProps) => {
+  const {address} = useAccount();
+  return (
+    <div className={styles.buttonContainer}>
+      <CustomConnectButton />
+      <div className="mt-4"></div>
+      {!!address ? <CustomButton
+        type="btn-primary"
+        disabled={!address || address == hackedAddress}
+        text={"Confirm"}
+        onClick={() => {
+          if(!address || address == hackedAddress){
+            return
+          }
+          startProcess(address)
+        }}
+      />: <></>}
+    </div>
+  );
 };
