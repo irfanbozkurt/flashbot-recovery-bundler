@@ -70,6 +70,7 @@ export const RecoveryProcess = ({
         image={ErrorSvg}
       />
     );
+    //TODO provide clear data mechanism title "Gas Covered Already"
   }
 
   if (
