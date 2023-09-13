@@ -62,6 +62,7 @@ const Home: NextPage = () => {
     if (processStatus !== RecoveryProcessStatus.INITIAL) {
       return BundlingSteps.SIGN_RECOVERY_TXS;
     }
+    //TODO review why disappears
     if (unsignedTxs.length > 0) {
       return BundlingSteps.TX_BUNDLE;
     }
