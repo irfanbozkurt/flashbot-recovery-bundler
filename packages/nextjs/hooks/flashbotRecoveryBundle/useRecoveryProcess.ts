@@ -8,11 +8,13 @@ import { v4 } from "uuid";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { ERC20Tx, ERC721Tx, ERC1155Tx, RecoveryTx } from "~~/types/business";
 import { RecoveryProcessStatus } from "~~/types/enums";
-import { DUMMY_ADDRESS, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
+import { DUMMY_ADDRESS, ERC721_ABI, ERC1155_ABI, ERC20_ABI} from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
+const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
+
 
 interface IStartProcessPops {
   safeAddress: string;
@@ -250,10 +252,27 @@ export const useRecoveryProcess = () => {
     transactions: RecoveryTx[];
     safeAddress: string;
     hackedAddress: string;
-  }):RecoveryTx[] => {
+  }): RecoveryTx[] => {
+    return transactions.map((item) => {
+      if (item.type === "erc20") {
+        const data = item as ERC20Tx;
+        const newErc20tx: ERC20Tx = {
+          type: data.type,
+          info: data.info,
+          symbol: data.symbol,
+          amount: data.amount,
+          toEstimate: {
+            from: data.toEstimate.from,
+            to: data.toEstimate.to,
+            data: erc20Interface.encodeFunctionData("transfer", [
+              safeAddress,
+              BigNumber.from(data.amount),
+            ]) as `0x${string}`,
+          },
+        };
+        return newErc20tx;
+      }
 
-    //TODO FRAN add erc20
-    return transactions.map(item => {
       if (item.type === "erc721") {
         const data = item as ERC721Tx;
         const newErc721Tx: ERC721Tx = {
@@ -274,27 +293,26 @@ export const useRecoveryProcess = () => {
         return newErc721Tx;
       }
 
-        const data = item as ERC1155Tx;
-        const newErc1155Tx: ERC1155Tx = {
-          type: data.type,
-          info: data.info,
-          uri: data.uri,
-          tokenIds: data.tokenIds,
-          amounts: data.amounts,
-          toEstimate: {
-            from: data.toEstimate.from,
-            to: data.toEstimate.to,
-            data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [
-              hackedAddress,
-              safeAddress,
-              data.tokenIds,
-              data.amounts,
-              ethers.constants.HashZero,
-            ]) as `0x${string}`,
-          },
-        };
-        return newErc1155Tx;
-
+      const data = item as ERC1155Tx;
+      const newErc1155Tx: ERC1155Tx = {
+        type: data.type,
+        info: data.info,
+        uri: data.uri,
+        tokenIds: data.tokenIds,
+        amounts: data.amounts,
+        toEstimate: {
+          from: data.toEstimate.from,
+          to: data.toEstimate.to,
+          data: erc1155Interface.encodeFunctionData("safeBatchTransferFrom", [
+            hackedAddress,
+            safeAddress,
+            data.tokenIds,
+            data.amounts,
+            ethers.constants.HashZero,
+          ]) as `0x${string}`,
+        },
+      };
+      return newErc1155Tx;
     });
   };
 
@@ -372,6 +390,7 @@ export const useRecoveryProcess = () => {
     signRecoveryTransactions,
     resetStatus,
     showTipsModal,
-    unsignedTxs, setUnsignedTxs
+    unsignedTxs,
+    setUnsignedTxs,
   };
 };
