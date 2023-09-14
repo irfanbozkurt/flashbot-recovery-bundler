@@ -7,7 +7,6 @@ import { isAddress } from "ethers/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { CustomButton } from "~~/components/CustomButton/CustomButton";
 import { AddressInput } from "~~/components/scaffold-eth";
-import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 
 interface IProps {
   isVisible: boolean;
