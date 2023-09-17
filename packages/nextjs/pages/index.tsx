@@ -33,17 +33,18 @@ const Home: NextPage = () => {
     signRecoveryTransactions,
     blockCountdown,
     showTipsModal,
-    unsignedTxs, setUnsignedTxs
+    unsignedTxs,
+    setUnsignedTxs,
+    validateBundleIsReady,
   } = useRecoveryProcess();
 
   const startSigning = () => {
     signRecoveryTransactions(hackedAddress, unsignedTxs, currentBundleId, false);
   };
-  const startRecovery = (safe?:string) => {
-    const accountToUse = safe ? safe :DUMMY_ADDRESS
-    setSafeAddress(accountToUse);
+  const startRecovery = (safe: string) => {
+    setSafeAddress(safe);
     startRecoveryProcess({
-      safeAddress:accountToUse,
+      safeAddress: safe,
       modifyBundleId: setCurrentBundleId,
       totalGas: totalGasEstimate,
       hackedAddress,
@@ -89,10 +90,7 @@ const Home: NextPage = () => {
           alignItems: "center",
         }}
       >
-        <HackedAddressProcess
-          isVisible={!hackedAddress}
-          onSubmit={newAddress => setHackedAddress(newAddress)}
-        />
+        <HackedAddressProcess isVisible={!hackedAddress} onSubmit={newAddress => setHackedAddress(newAddress)} />
 
         <BundlingProcess
           isVisible={!!hackedAddress}
@@ -105,7 +103,7 @@ const Home: NextPage = () => {
           setUnsignedTxs={setUnsignedTxs}
           setIsOnBasket={setIsOnBasket}
           setTotalGasEstimate={setTotalGasEstimate}
-          startRecovery={(add) => startRecovery(add)}
+          startRecovery={() => validateBundleIsReady("")}
         />
 
         <RecoveryProcess
@@ -113,7 +111,7 @@ const Home: NextPage = () => {
           finishProcess={reload}
           startSigning={startSigning}
           showTipsModal={showTipsModal}
-          startProcess={startRecovery}
+          startProcess={add => startRecovery(add)}
           blockCountdown={blockCountdown}
           connectedAddress={connectedAddress}
           safeAddress={safeAddress}

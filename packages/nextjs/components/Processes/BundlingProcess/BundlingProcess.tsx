@@ -21,7 +21,7 @@ interface IProps {
   setUnsignedTxs: Dispatch<SetStateAction<RecoveryTx[]>>;
   setIsOnBasket: Dispatch<SetStateAction<boolean>>;
   setTotalGasEstimate: Dispatch<SetStateAction<BigNumber>>;
-  startRecovery: (add?:string) => void;
+  startRecovery: () => void;
 }
 export const BundlingProcess = ({
   isVisible,
@@ -75,7 +75,7 @@ export const BundlingProcess = ({
 
   return (
     <motion.div className={styles.bundling} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <SideBar activeStep={activeStep} hackedAddress={hackedAddress} safeAddress={safeAddress} />
+      <SideBar activeStep={activeStep} hackedAddress={hackedAddress}/>
       <div className={`${styles.content} bg-base-300`}>
         <AssetSelectionStep
           isVisible={activeStep === BundlingSteps.ASSET_SELECTION}

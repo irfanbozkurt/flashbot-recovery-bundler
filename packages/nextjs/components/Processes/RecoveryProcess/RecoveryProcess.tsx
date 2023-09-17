@@ -41,10 +41,8 @@ export const RecoveryProcess = ({
   showTipsModal,
   blockCountdown,
   connectedAddress,
-  safeAddress,
   hackedAddress,
 }: IProps) => {
-  const {address} = useAccount()
   const { showError } = useShowError();
   const [donationValue, setDonationValue] = useState<string>("");
 

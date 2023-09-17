@@ -105,7 +105,7 @@ export const useRecoveryProcess = () => {
     if (!address) {
       setStepActive(RecoveryProcessStatus.NO_CONNECTED_ACCOUNT);
       return false;
-    } else if (address != safeAddress || address == DUMMY_ADDRESS) {
+    } else if (address != safeAddress || safeAddress == DUMMY_ADDRESS) {
       setStepActive(RecoveryProcessStatus.NO_SAFE_ACCOUNT);
       return false;
     }
@@ -387,6 +387,7 @@ export const useRecoveryProcess = () => {
     sentTxHash,
     blockCountdown,
     startRecoveryProcess,
+    validateBundleIsReady,
     signRecoveryTransactions,
     resetStatus,
     showTipsModal,
