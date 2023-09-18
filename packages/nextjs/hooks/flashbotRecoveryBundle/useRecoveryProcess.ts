@@ -8,13 +8,12 @@ import { v4 } from "uuid";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { ERC20Tx, ERC721Tx, ERC1155Tx, RecoveryTx } from "~~/types/business";
 import { RecoveryProcessStatus } from "~~/types/enums";
-import { DUMMY_ADDRESS, ERC721_ABI, ERC1155_ABI, ERC20_ABI} from "~~/utils/constants";
+import { DUMMY_ADDRESS, ERC20_ABI, ERC721_ABI, ERC1155_ABI } from "~~/utils/constants";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 
 const erc721Interface = new ethers.utils.Interface(ERC721_ABI);
 const erc1155Interface = new ethers.utils.Interface(ERC1155_ABI);
 const erc20Interface = new ethers.utils.Interface(ERC20_ABI);
-
 
 interface IStartProcessPops {
   safeAddress: string;
@@ -75,7 +74,10 @@ export const useRecoveryProcess = () => {
       setBlockCountdown(blockDelta);
 
       if (blockDelta < 0) {
-        showError("Error, try again");
+        showError(
+          `The recovery has failed, To solve this error clean your wallet, remove all "Hacked Wallet Recovery RPC" and clear activity data`,
+          true,
+        );
         setSentBlock(0);
         setSentTxHash("");
         resetStatus();
@@ -253,7 +255,7 @@ export const useRecoveryProcess = () => {
     safeAddress: string;
     hackedAddress: string;
   }): RecoveryTx[] => {
-    return transactions.map((item) => {
+    return transactions.map(item => {
       if (item.type === "erc20") {
         const data = item as ERC20Tx;
         const newErc20tx: ERC20Tx = {
@@ -359,7 +361,7 @@ export const useRecoveryProcess = () => {
         params: [
           {
             chainId: `0x${targetNetwork.network == "goerli" ? 5 : 1}`,
-            chainName: "Flashbot Personal RPC",
+            chainName: "Hacked Wallet Recovery RPC",
             nativeCurrency: {
               name: "ETH",
               symbol: "ETH",

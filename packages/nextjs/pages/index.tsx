@@ -13,8 +13,9 @@ import { HackedAddressProcess } from "~~/components/Processes/HackedAddressProce
 import { RecoveryProcess } from "~~/components/Processes/RecoveryProcess/RecoveryProcess";
 import { useRecoveryProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
+import ErrorSvg2 from "~~/public/assets/flashbotRecovery/error.svg";
+
 import ErrorSvg from "~~/public/assets/flashbotRecovery/error.svg";
-import { RecoveryTx } from "~~/types/business";
 import { BundlingSteps, RecoveryProcessStatus } from "~~/types/enums";
 import { DUMMY_ADDRESS } from "~~/utils/constants";
 
@@ -25,7 +26,7 @@ const Home: NextPage = () => {
   const [totalGasEstimate, setTotalGasEstimate] = useState<BigNumber>(BigNumber.from("0"));
   const [isOnBasket, setIsOnBasket] = useState(false);
   const [currentBundleId, setCurrentBundleId] = useLocalStorage<string>("bundleUuid", "");
-  const { error, resetError } = useShowError();
+  const { error, resetError,isFinalProcessError} = useShowError();
 
   const {
     data: processStatus,
@@ -118,16 +119,21 @@ const Home: NextPage = () => {
           hackedAddress={hackedAddress}
         />
 
-        {error != "" ? (
+        {isFinalProcessError && error != "" ? (
+          <CustomPortal
+            close={() => resetError()}
+            title={"Something wrong has happend"}
+            description={error}
+            image={ErrorSvg2}
+          />
+        ) : error != "" ? (
           <CustomPortal
             close={() => resetError()}
             title={"Something wrong has happend"}
             description={error}
             image={ErrorSvg}
           />
-        ) : (
-          <></>
-        )}
+        ):<></>}
       </div>
     </>
   );
