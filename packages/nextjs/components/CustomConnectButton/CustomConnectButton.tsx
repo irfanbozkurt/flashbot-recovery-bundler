@@ -1,5 +1,4 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import {BlockieAvatar } from "~~/components/scaffold-eth";
 /**
  * Custom Wagmi Connect Button (watch balance + custom design)

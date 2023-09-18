@@ -1,5 +1,5 @@
 import { useState } from "react";
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import IllustrationSvg from "../../../public/assets/flashbotRecovery/logo.svg";
 import styles from "./hackedAddressProcess.module.css";

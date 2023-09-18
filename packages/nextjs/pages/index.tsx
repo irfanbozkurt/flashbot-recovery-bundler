@@ -4,17 +4,14 @@ import { BigNumber } from "ethers";
 import { NextPage } from "next";
 import { useLocalStorage } from "usehooks-ts";
 import { useAccount } from "wagmi";
-import { CustomHeader } from "~~/components/CustomHeader/CustomHeader";
 import { CustomPortal } from "~~/components/CustomPortal/CustomPortal";
 import { MetaHeader } from "~~/components/MetaHeader";
 import { BundlingProcess } from "~~/components/Processes/BundlingProcess/BundlingProcess";
-import { ConnectionProcess } from "~~/components/Processes/ConnectionProcess/ConnectionProcess";
 import { HackedAddressProcess } from "~~/components/Processes/HackedAddressProcess/HackedAddressProcess";
 import { RecoveryProcess } from "~~/components/Processes/RecoveryProcess/RecoveryProcess";
 import { useRecoveryProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
 import GasSvg from "~~/public/assets/flashbotRecovery/gas-illustration.svg";
-
 import ErrorSvg from "~~/public/assets/flashbotRecovery/error.svg";
 import { BundlingSteps, RecoveryProcessStatus } from "~~/types/enums";
 import { DUMMY_ADDRESS } from "~~/utils/constants";
