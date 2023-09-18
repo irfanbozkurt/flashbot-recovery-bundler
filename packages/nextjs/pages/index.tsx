@@ -13,7 +13,7 @@ import { HackedAddressProcess } from "~~/components/Processes/HackedAddressProce
 import { RecoveryProcess } from "~~/components/Processes/RecoveryProcess/RecoveryProcess";
 import { useRecoveryProcess } from "~~/hooks/flashbotRecoveryBundle/useRecoveryProcess";
 import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
-import ErrorSvg2 from "~~/public/assets/flashbotRecovery/error.svg";
+import GasSvg from "~~/public/assets/flashbotRecovery/gas-illustration.svg";
 
 import ErrorSvg from "~~/public/assets/flashbotRecovery/error.svg";
 import { BundlingSteps, RecoveryProcessStatus } from "~~/types/enums";
@@ -118,13 +118,13 @@ const Home: NextPage = () => {
           safeAddress={safeAddress}
           hackedAddress={hackedAddress}
         />
-
+        
         {isFinalProcessError && error != "" ? (
           <CustomPortal
             close={() => resetError()}
             title={"Something wrong has happend"}
             description={error}
-            image={ErrorSvg2}
+            image={GasSvg}
           />
         ) : error != "" ? (
           <CustomPortal
