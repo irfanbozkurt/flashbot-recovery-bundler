@@ -1,0 +1,24 @@
+.container {
+  width: 100%;
+
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  font-size: 23px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 100%;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+}
+.titleContainer{
+  width: 100%;
+  position: relative;
+  max-width: 438px;
+}

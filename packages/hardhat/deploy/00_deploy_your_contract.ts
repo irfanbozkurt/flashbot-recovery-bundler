@@ -2,12 +2,12 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 /**
- * Deploys a contract named "YourContract" using the deployer account and
+ * Deploys a contract named "DonationMultiSig" using the deployer account and
  * constructor arguments set to the deployer address
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
-const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployDonationMultiSig: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -21,37 +21,22 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  await deploy("A", {
+  await deploy("DonationMultiSig", {
     from: deployer,
-    args: [],
-    log: true,
-    autoMine: true,
-  });
-  await deploy("Z", {
-    from: deployer,
-    args: [],
-    log: true,
-    autoMine: true,
-  });
-  await deploy("B", {
-    from: deployer,
-    args: [],
-    log: true,
-    autoMine: true,
-  });
-  await deploy("C", {
-    from: deployer,
-    args: [],
+    args: [
+      ["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"],
+      [10, 10],
+    ],
     log: true,
     autoMine: true,
   });
 
   // Get the deployed contract
-  // const yourContract = await hre.ethers.getContract("YourContract", deployer);
+  // const DonationMultiSig = await hre.ethers.getContract("DonationMultiSig", deployer);
 };
 
-export default deployYourContract;
+export default deployDonationMultiSig;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
-// e.g. yarn deploy --tags YourContract
-deployYourContract.tags = ["YourContract"];
+// e.g. yarn deploy --tags DonationMultiSig
+deployDonationMultiSig.tags = ["DonationMultiSig"];
