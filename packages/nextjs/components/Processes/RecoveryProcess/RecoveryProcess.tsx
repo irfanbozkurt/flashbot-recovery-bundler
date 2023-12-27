@@ -58,7 +58,7 @@ export const RecoveryProcess = ({
       <CustomPortal
         title={"Clear cache"}
         description={
-          "We've encountered an issue due to outdated cached data. Please clear your app's cache to resolve this error."
+          "We've encountered an issue with outdated cached data. Please clear your browser's cache to resolve this error."
         }
         image={VideoSvg}
       />
@@ -69,9 +69,9 @@ export const RecoveryProcess = ({
   if (recoveryStatus == RecoveryProcessStatus.NO_SAFE_ACCOUNT) {
     return (
       <CustomPortal
-        title={"Switch to safe address"}
+        title={"Switch to safe wallet"}
         description={
-          "To ensure a secure asset transfer, switch to your safe wallet. This step guarantees the safe retrieval of your assets without any further risks."
+          "Connect a wallet that has some funds to pay network fees so you can recover the assets contained in your hacked wallet."
         }
         button={{
           text: "Continue",
@@ -87,7 +87,9 @@ export const RecoveryProcess = ({
     return (
       <CustomPortal
         title={"Switching Network"}
-        description={"Allow us to create and switch to your personal RPC network to prepare the transaction bundle"}
+        description={
+          "Now we will switch to a shielded network to recover your assets without the attacker noticing. Approve the network change in your wallet."
+        }
         image={VideoSvg}
       />
     );
@@ -98,7 +100,7 @@ export const RecoveryProcess = ({
       <CustomPortal
         title={"Increase the gas"}
         description={
-          "We recommend set a hight gas to ensure a successful asset recovery. Your increased gas allocation will facilitate the seamless completion of the transaction."
+          "To ensure inclusion of your transaction in the next block, increase the gas fee. Approve the gas increase in your wallet."
         }
         image={VideoSvg}
       />
@@ -108,10 +110,8 @@ export const RecoveryProcess = ({
   if (recoveryStatus == RecoveryProcessStatus.SWITCH_TO_HACKED_ACCOUNT) {
     return (
       <CustomPortal
-        title={"Switch to Hacked Address"}
-        description={
-          "To proceed with asset recovery, switch to the compromised address in your wallet. This step is essential to verify ownership and continue with the recovery process."
-        }
+        title={"Switch to Hacked Wallet"}
+        description={"To proceed with recovering your assets, switch to the hacked wallet."}
         button={{
           text: "Continue",
           disabled: connectedAddress !== hackedAddress,
@@ -131,7 +131,7 @@ export const RecoveryProcess = ({
       <CustomPortal
         title={"Sign each transaction"}
         description={
-          "Each bundled transaction requires your individual signature to verify and complete the asset recovery process. Please sign each transaction as they appear."
+          "Now you will be prompted to sign a transaction for each asset you selected for recovery. Approve each transaction as it appears."
         }
         image={LogoSvg}
       />
@@ -141,9 +141,9 @@ export const RecoveryProcess = ({
   if (recoveryStatus == RecoveryProcessStatus.LISTEN_BUNDLE) {
     return (
       <CustomPortal
-        title={"Stay Patient, Stay Secure"}
+        title={"Wait for confirmation"}
         description={
-          "Your asset recovery is in progress. To ensure a successful retrieval and accurate transaction completion stay on the page."
+          "Your asset recovery is in progress. Stay on this page and wait for your transactions to be included in a block."
         }
         image={ClockSvg}
         indicator={blockCountdown}
@@ -156,7 +156,7 @@ export const RecoveryProcess = ({
       <CustomPortal
         title={"Your assets have been recovered!"}
         description={
-          "Check your safe wallet for your retrieved assets. Share your journey and consider to support us with a tip to continue serving the crypto community."
+          "Check the safe wallet for your recovered assets. Share your experience with others and consider supporting this project with a donation so we can continue to offer this service free of charge."
         }
         button={{
           text: "Finish",
@@ -167,14 +167,14 @@ export const RecoveryProcess = ({
       >
         <div className={styles.shareButtons}>
           <a
-            href="https://twitter.com/intent/tweet?url=https://yourwebsite.com&text=I%20have%20been%20helped%20to%20recover%20my%20assets%20with%20this%20amazing%20tool"
+            href="https://twitter.com/intent/tweet?url=https://hackedwalletrecovery.com&text=This%20project%20helped%20me%20recover%20my%20assets%20from%20a%20hacked%20wallet.%20I%20highly%20recommend%20it%20to%20anyone%20in%20a%20similar%20situation"
             target="_blank"
             rel="noopener noreferrer"
           >
             <Image width={40} src={TwitterSvg} alt={""} />
           </a>
           <a
-            href="https://t.me/share/url?url=https://yourwebsite.com&text=I%20have%20been%20helped%20to%20recover%20my%20assets%20with%20this%20amazing%20tool"
+            href="https://t.me/share/url?url=https://hackedwalletrecovery.com&text=This%20project%20helped%20me%20recover%20my%20assets%20from%20a%20hacked%20wallet.%20I%20highly%20recommend%20it%20to%20anyone%20in%20a%20similar%20situation"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -189,7 +189,7 @@ export const RecoveryProcess = ({
       <CustomPortal
         title={"Support Our Mission"}
         description={
-          "Your contribution can significantly impact our mission to provide safe and free tools that empower the community."
+          "Your contribution will help us continue to offer this service free of charge. Thank you for your support!"
         }
         button={{
           text: "Finish",
