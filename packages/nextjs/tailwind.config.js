@@ -34,17 +34,17 @@ module.exports = {
       },
       {
         scaffoldEthDark: {
-          primary: "#212638",
-          "primary-content": "#F9FBFF",
-          secondary: "#323f61",
-          "secondary-content": "#F9FBFF",
-          accent: "#4969A6",
-          "accent-content": "#F9FBFF",
+          primary: "#17A9E8",
+          "primary-content": "#293853",
+          secondary: "#243148",
+          "secondary-content": "#9FAFCC",
+          accent: "#243148",
+          "accent-content": "#17A9E8",
           neutral: "#F9FBFF",
           "neutral-content": "#385183",
-          "base-100": "#385183",
-          "base-200": "#2A3655",
-          "base-300": "#212638",
+          "base-100": "#3F5173",
+          "base-200": "#243148",
+          "base-300": "#293853",
           "base-content": "#F9FBFF",
           info: "#385183",
           success: "#34EEB6",
@@ -90,6 +90,11 @@ module.exports = {
   theme: {
     // Extend Tailwind classes (e.g. font-bai-jamjuree, animate-grow)
     extend: {
+      placeholderOpacity: {
+        10: "0.1",
+        15: "0.15",
+        20: "0.2",
+      },
       fontFamily: {
         "bai-jamjuree": ["Bai Jamjuree", "sans-serif"],
       },

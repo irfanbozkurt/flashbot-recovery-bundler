@@ -1,0 +1,88 @@
+.container{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0;
+}
+.mainContent{
+    width: 100%;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 600px;
+}
+
+.title{
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 100%;
+    margin: 0;
+}
+.assetItem{
+    display: flex;
+    height: 52px;
+    max-width: 600px;
+    width: 90%;
+    margin: 0 auto;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+.data{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    margin-left: 16px;
+}
+.data h3{
+    margin: 0;
+    font-size: 18px;
+font-style: normal;
+font-weight: 500;
+}
+.assetList{
+    width: 100%;
+    max-height: calc(100vh - 500px);
+    height: calc(100vh - 500px);
+    overflow: auto;
+    margin: 36px 0;
+    margin-bottom: 0;
+}
+
+.clear{
+    text-decoration: underline;
+    width: 230px;
+    margin-bottom: 42px;
+    margin-top: 16px;
+    text-align: center;
+    cursor: pointer;
+}
+.clear:hover{
+    color:#17A9E8
+}
+.logo{
+    width: 60px;
+    height: 60px;
+    margin-right: 16px;
+}
+
+.close{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left:16px;
+    margin-right: 16px;
+}
+.gasContainer{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-direction: row;
+    width: 90%;
+}

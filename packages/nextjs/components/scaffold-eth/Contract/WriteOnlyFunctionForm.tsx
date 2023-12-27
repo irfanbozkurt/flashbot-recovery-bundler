@@ -11,12 +11,14 @@ import {
   getParsedContractFunctionArgs,
   getParsedError,
 } from "~~/components/scaffold-eth";
-import { CustomTx, RecoveryTx } from "~~/types/business";
+import { IWrappedRecoveryTx } from "~~/hooks/flashbotRecoveryBundle/useAutodetectAssets";
+import { useShowError } from "~~/hooks/flashbotRecoveryBundle/useShowError";
+import { CustomTx } from "~~/types/business";
 import { notification } from "~~/utils/scaffold-eth";
 
 type WriteOnlyFunctionFormProps = {
   abiFunction: AbiFunction;
-  addUnsignedTx: (newTx: RecoveryTx) => void;
+  addUnsignedTx: (newTx: IWrappedRecoveryTx) => void;
   contractAddress: Address;
   hackedAddress: Address;
   fragmentString: string;
@@ -31,6 +33,8 @@ export const CustomContractWriteForm = ({
   hackedAddress,
   contractAddress,
 }: WriteOnlyFunctionFormProps) => {
+  const { showError } = useShowError();
+
   const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
   const [txValue, setTxValue] = useState<string | bigint>("");
 
@@ -74,7 +78,7 @@ export const CustomContractWriteForm = ({
             onClick={async () => {
               try {
                 if (!fragmentString) {
-                  alert("refresh page and try again");
+                  showError("refresh page and try again");
                   return;
                 }
 
@@ -85,7 +89,7 @@ export const CustomContractWriteForm = ({
                 const customTx: CustomTx = {
                   type: "custom",
                   info: `Custom call (${abiFunction.name}) to ${contractAddress}`,
-                  toSign: {
+                  toEstimate: {
                     from: hackedAddress,
                     to: contractAddress,
                     data: new ethers.utils.Interface([fragment]).encodeFunctionData(
@@ -95,7 +99,7 @@ export const CustomContractWriteForm = ({
                   },
                 };
 
-                addUnsignedTx(customTx);
+                addUnsignedTx({ tx: customTx });
 
                 setForm(() => getInitialFormState(abiFunction));
                 setTxValue(0n);
@@ -107,7 +111,7 @@ export const CustomContractWriteForm = ({
               }
             }}
           >
-            🧺 add 🧺
+            add
           </button>
         </div>
       </div>

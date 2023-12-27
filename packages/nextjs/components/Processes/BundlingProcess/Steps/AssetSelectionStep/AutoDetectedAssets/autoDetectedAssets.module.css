@@ -1,0 +1,71 @@
+.assetItem {
+  display: flex;
+  height: 92px;
+  max-width: 458px;
+  margin: 0 auto;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.data {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.assetList {
+  width: 100%;
+  max-height: calc(100vh - 400px);
+  height: calc(100vh - 400px);
+  overflow: auto;
+  margin: 36px 0;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  margin-right: 16px;
+  border-radius: 8px;
+}
+
+.logoContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 16px;
+}
+
+.loader {
+  height: 94px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading span {
+  background-color: #3a4862;
+  width: 100px;
+  height: 24px;
+}
+.loading h3 {
+  background-color: #3a4862;
+  width: 130px;
+  height: 24px;
+}
+
+.loading {
+  animation: loading 1s infinite;
+}
+.noAssets{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+@keyframes loading {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
